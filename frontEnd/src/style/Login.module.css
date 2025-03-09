@@ -1,0 +1,62 @@
+.loginContainer {
+  padding: 1.5rem;
+  background-color: #efdebb;
+  border-radius: 20px;
+  box-shadow: 0 0 10px #efdebb;
+  color: #c3332d;
+  max-width: 500px;
+}
+
+.input { 
+  display: flex;
+  align-items: center;
+  margin-bottom: 3rem;
+}
+
+.formControlContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formControl {
+  background-color: #fff;
+  color: #c3332d;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  display: inline-block;
+  font-size: 1rem;
+  padding: 0.5rem;
+  margin-bottom: 20px;
+}
+
+.btnPrimary {
+  border-radius: 0;
+  width: 100%;
+  margin-bottom: 20px;
+  background-color: #c3332d;
+  cursor: pointer;
+  border-radius: 5px;
+  outline-style: none;
+  font-size: 20px;
+  padding: 5px;
+  color: #fff;
+  outline: none;
+}
+
+.btnPrimary:hover {
+  background-color:  #112736;
+  color: #f8bc63;
+}
+
+.textDecorationNone {
+  color: #112736;
+}
+
+.textDecorationNone:hover {
+  color: #c3332d;
+}
+
+#loginForm {
+  text-align: start;
+}

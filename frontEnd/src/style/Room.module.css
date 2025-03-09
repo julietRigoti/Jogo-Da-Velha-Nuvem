@@ -1,0 +1,55 @@
+.listGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .listTitle {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+  
+  .listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #112736;
+    color: #e9881e;
+    border: 1px solid #e9881e;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 500px;
+
+  }
+
+  .roomPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 20px;
+    background-color: #efdebb;
+    padding: 20px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  button {
+    background-color: #e9881e;
+    border: none;
+    padding: 10px 20px;
+    color: #112736;
+    font-family: "Press Start 2P", cursive;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 10px;
+
+  }
+  
+  button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+  }

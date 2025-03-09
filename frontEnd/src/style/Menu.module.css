@@ -1,0 +1,33 @@
+.btnPrimary {
+  border-radius: 0;
+  width: 100%;
+  background-color: #e9881e;
+  color: white;
+  padding: 15px;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.btnPrimary:hover {
+  background-color: #c3332d;
+  color: #f8bc63;
+}
+.btnLg {
+  font-size: 1.5rem;
+  border-radius: 10px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.btnLg:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.3);
+}
+
+.menuContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}

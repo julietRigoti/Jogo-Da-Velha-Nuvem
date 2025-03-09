@@ -1,0 +1,87 @@
+.principaDiv {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c3332d;
+    font-family: "Press Start 2P", cursive;
+  }
+  
+  .title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .signUpContainer {
+    padding: 20px;
+    background-color: #efdebb;
+    border-radius: 20px;
+    box-shadow: 0 0 10px #efdebb;
+    color: #c3332d;
+    max-width: 600px;
+    text-align: center;
+  }
+  
+  .signUpForm {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .inputGroup {
+    margin-bottom: 15px;
+    text-align: left;
+    max-width: 100%;
+    
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .inputGroup label {
+    font-size: 14px;
+    color: #c3332d;
+  }
+  
+  .inputGroup input {
+    padding: 8px;
+    margin-top: 5px;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #c3332d;
+    font-size: 14px;
+  }
+  
+  .btnSubmit {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #c3332d;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .btnSubmit:hover {
+    background-color: #112736;
+    color: #f8bc63;
+  }
+  
+  .loginLink {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  
+  .btnLink {
+    background: none;
+    border: none;
+    color: #112736;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .btnLink:hover {
+    color: #c3332d;
+  }
+  
+  

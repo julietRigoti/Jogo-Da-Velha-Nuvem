@@ -1,0 +1,46 @@
+.principalDiv {
+    text-align: center;
+  }
+  
+  .chooseContainer {
+    display: inline-block;
+    width: 50%;
+    background-color: #efdebb;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #efdebb;
+  }
+  
+  .playerSelection {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .imagemX,
+  .imagemO {
+    max-width: 100%;
+    margin-top: 20px;
+  }
+  
+  .btn-primary {
+    border-radius: 0;
+    width: 45%;
+    background-color: #e9881e !important;
+  }
+  
+  .btn-primary:hover {
+    background-color: #c3332d !important;
+    color: #f8bc63 !important;
+  }
+  
+  .btn-lg {
+    font-size: 1.5rem;
+    border-radius: 10px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .btn-lg:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.3);
+  }
+  

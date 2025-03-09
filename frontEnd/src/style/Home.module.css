@@ -1,0 +1,84 @@
+body {
+  background: #112736;
+  height: 100vh;
+  color: #e9881e;
+  font-family: "Press Start 2P", cursive !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.principalDiv {
+  max-width: 1200px;
+  padding: 50px;
+  margin: 0 auto;
+  gap: 100px;
+  height: 100%;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.h1 {
+  font-size: 3em;
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.h2{
+  font-size: 2em;
+  text-align: center;
+}
+
+.loginButtonsContainer {
+  display: flex;
+  max-width: 520px;
+  width: 100%;
+  gap: 30px;
+  flex-direction: column;
+}
+
+.pixelBtnLogin {
+  display: inline-block;
+  background-color: #e9881e;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 0 10px #f8bc63;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.pixelBtnLogin:hover {
+  background-color: #efdebb;
+  color: #c3332d;
+}
+
+.pixelBtnSignup {
+  display: inline-block;
+  background-color: #e9881e;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 0 10px #f8bc63;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.pixelBtnSignup:hover {
+  background-color: #efdebb;
+  color: #c3332d;
+}
+
+.imagemX {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 100px;
+}
+
+.imagemO {
+  position: fixed;
+  bottom: 0;
+  left: 100px;
+  height: 100px;
+}
