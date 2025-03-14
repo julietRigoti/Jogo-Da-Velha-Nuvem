@@ -85,6 +85,46 @@ router.post("/users", async (req, res) => {
     }
 });
 
+// Criar a rota de login
+router.post("/login", async (req, res) => {
+    try {
+        // Receber os dados enviados no corpo da requisição (email e senha)
+        const { emailJogador, passwordJogador } = req.body;
+
+        // Verificar se o usuário existe no banco de dados
+        const jogador = await db.Jogador.findOne({
+            where: { emailJogador }
+        });
+
+        // Se o jogador não for encontrado, retornar erro
+        if (!jogador) {
+            return res.status(400).json({
+                mensagem: "Erro: Usuário não encontrado!"
+            });
+        }
+
+        // Comparar a senha fornecida com a armazenada no banco
+        if (jogador.passwordJogador !== passwordJogador) {
+            return res.status(400).json({
+                mensagem: "Erro: Senha incorreta!"
+            });
+        }
+
+        // Se tudo estiver correto, retornar os dados do jogador
+        return res.json({
+            mensagem: "Login bem-sucedido!",
+            jogador: jogador.dataValues
+        });
+    } catch (err) {
+        console.error('Erro ao realizar login:', err);
+        return res.status(500).json({
+            mensagem: "Erro ao tentar realizar login.",
+            error: err.message
+        });
+    }
+});
+
+
 // Criar a rota para editar (sera utilizada para atualizar o XP do jogador)
 router.put("/users", async (req, res) => {
     // Receber os dados enviados no corpo da requisicao
