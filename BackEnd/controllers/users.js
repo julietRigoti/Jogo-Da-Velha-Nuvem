@@ -6,8 +6,8 @@ const router = express.Router();
 // Incluir o arquivo que possui a conexao com o banco de dados
 const db = require('./../db/models/index');
 
-// Criar a rota listar 
-router.get("/listar", async (req, res) => {
+// Criar a rota listar (Mostrar o Ranking dos Jogadores por meio da sua pontuacao)
+router.get("/users", async (req, res) => {
     // Recuperar todos os usuarios do banco de dados 
     const users = await db.Jogador.findAll({
         // Indicar quais colunas recuperar 
@@ -31,8 +31,36 @@ router.get("/listar", async (req, res) => {
 
 });
 
+// Criar a rota visualizar e receber o parametro id enviado na URL (Mostrar as informacoes especificas do jogador)
+router.get("/users/:idJogador", async (req, res) => {
+    // Receber um parametro enviado na URL
+    const { idJogador } = req.params;
+
+    // Recuperar o registro do banco de dados
+    const user = await db.Jogador.findOne({
+        // Indicar quais colunas recuperar
+        attributes: ['idJogador', 'nicknameJogador', 'pontuacaoJogadorXP'],
+
+        // Acrescentar condicao para indicar qual registro deve ser retornado do banco de dados
+        where: { idJogador },
+    });
+
+    // Acessar o IF se encontrar o registro no banco de dados
+    if (user) {
+        // Pausar o processamento e retornar os dados
+        return res.json({
+            user: user.dataValues
+        });
+    } else {
+        // Pausar o processamento e retornar a mensagem de erro
+        return res.status(400).json({
+            mensagem: "Erro: Usuário não encontrado!"
+        });
+    }
+});
+
 // Criar a rota cadastrar
-router.post("/cadastrar", async (req, res) => {
+router.post("/users", async (req, res) => {
     try {
         // Receber os dados enviados no corpo da requisicao
         var dados = req.body;
@@ -55,6 +83,26 @@ router.post("/cadastrar", async (req, res) => {
             error: err.message
         });
     }
+});
+
+// Criar a rota para editar (sera utilizada para atualizar o XP do jogador)
+router.put("/users", async (req, res) => {
+    // Receber os dados enviados no corpo da requisicao
+    var dados = req.body;
+
+    // Editar no banco de dados 
+    await db.Jogador.update(dados, { where: { idJogador: dados.idJogador } })
+        .then(() => {
+            // Pausar o processamento e retornar a mensagem
+            return res.json({
+                mensagem: "Usuario editado com sucesso!"
+            });
+        }).catch(() => {
+            // Pausar o processamento e retornar a mensagem
+            return res.status(400).json({
+                mensagem: "Erro: Usuario nao editado com sucesso!"
+            });
+        });
 });
 
 // Exportar a instrução que está dentro da constante router
