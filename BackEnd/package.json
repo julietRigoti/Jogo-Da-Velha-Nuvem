@@ -4,7 +4,13 @@
   "description": "Criar o arquivo package\r ### npm init",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "echo \"Build script not defined\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "db:create": "sequelize-cli db:create" 
   },
   "author": "",
   "license": "ISC",
@@ -17,5 +23,6 @@
   "devDependencies": {
     "nodemon": "^3.1.9",
     "sequelize-cli": "^6.6.2"
-  }
+  },
+  "keywords": []
 }
