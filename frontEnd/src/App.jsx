@@ -11,8 +11,7 @@ function App() {
   return (
     <GameProvider>
       <Router>
-        <Routes>
-          
+        <Routes>  
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/menu" element={<Menu />} />
