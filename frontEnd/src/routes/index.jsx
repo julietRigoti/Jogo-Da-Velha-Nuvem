@@ -2,15 +2,18 @@ import { Routes, Route } from 'react-router-dom';
 import Login from '../pages/Login';
 import Home from '../pages/Home';
 import SignUp from '../pages/SignUp';
-import Room from '../pages/Rooms';
-
+import CreateRoom from '../pages/CreateRooms';
+import RoomList from '../pages/RoomList';
+import JoinRoom from '../pages/JoinRoom';
 function RoutesComponent() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signUp" element={<SignUp />} />
-      <Route path='/rooms' element={<Room />} />
+      <Route path='/create-room' element={<CreateRoom />} />
+      <Route path='/roomlist' element={<RoomList />} />
+      <Route path='/join-room/:idSala' element={<JoinRoom />} />
     </Routes>
   );
 }
