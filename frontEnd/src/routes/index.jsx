@@ -10,7 +10,7 @@ function RoutesComponent() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/lignUp" element={<SignUp />} />
+      <Route path="/signUp" element={<SignUp />} />
       <Route path="/menu" element={<Menu />} />
       <Route path='/rooms' element={<Room />} />
     </Routes>

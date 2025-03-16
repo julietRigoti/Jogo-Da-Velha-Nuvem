@@ -22,8 +22,6 @@ const Menu = () => {
             <h1>Jogo da Velha</h1>
             <div className={styleMenu.menuContainer}>
                 <button className={styleMenu.btnPrimary} onClick={handleCreateRoom}>Criar Sala</button>
-                <button className={styleMenu.btnPrimary} onClick={() => navigate('/game-friend')}>Jogar com Amigo</button>
-                <button className={styleMenu.btnPrimary}>Jogar com Aleatório</button>
             </div>
 
             <img
