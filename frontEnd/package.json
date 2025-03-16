@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "npm build",
-    "serve": "vite preview"
+    "build": "vite build",
+    "serve": "vite preview",
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^1.0.0",
@@ -14,6 +15,6 @@
     "react-router-dom": "^7.3.0",
     "socket.io-client": "^4.8.1",
     "uuid": "^11.1.0",
-    "vite": "^2.9.9"
+    "vite": "^6.2.2"
   }
 }
