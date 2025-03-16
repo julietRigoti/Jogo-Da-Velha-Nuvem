@@ -5,6 +5,7 @@ import SignUp from '../pages/SignUp';
 import CreateRoom from '../pages/CreateRoom';
 import RoomList from '../pages/RoomList';
 import JoinRoom from '../pages/JoinRoom';
+import Room from '../pages/Room';
 function RoutesComponent() {
   return (
     <Routes>
@@ -14,6 +15,7 @@ function RoutesComponent() {
       <Route path='/create-room' element={<CreateRoom />} />
       <Route path='/roomlist' element={<RoomList />} />
       <Route path='/join-room/:idSala' element={<JoinRoom />} />
+      <Route path='/room/:idSala' element={<Room />} />
     </Routes>
   );
 }

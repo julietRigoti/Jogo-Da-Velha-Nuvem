@@ -7,6 +7,7 @@ import CreateRooms from './pages/CreateRoom';
 import Home from './pages/Home';
 import RoomList from './pages/RoomList';
 import JoinRoom from './pages/JoinRoom';
+import Room from './pages/Room';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/create-room" element={<CreateRooms />} /> 
           <Route path="/roomlist" element={<RoomList />} />
           <Route path="/join-room/:idSala" element={<JoinRoom />} />
+          <Route path="/room/:idSala" element={<Room />} />
           <Route path="*" element={<Home />} />
          
         </Routes>
