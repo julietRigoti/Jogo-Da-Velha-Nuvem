@@ -1,25 +1,25 @@
 {
-  "name": "frontend",
+  "name": "jogo-da-velha-nuvem",
   "version": "1.0.0",
-  "main": "eslint.config.js",
   "scripts": {
     "dev": "vite",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.2.1"
+    "build": "npm build",
+    "serve": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
     "axios": "^1.8.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+=======
+    "@vitejs/plugin-react": "^1.0.0",
+    "axios": "^1.8.2",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+>>>>>>> 4d2539bdf5aed37d7e19096bf984974d5cb6bfdc
     "react-router-dom": "^7.3.0",
     "socket.io-client": "^4.8.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "vite": "^2.9.9"
   }
 }
