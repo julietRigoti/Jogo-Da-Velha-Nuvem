@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Login from '../pages/Login';
 import Home from '../pages/Home';
 import SignUp from '../pages/SignUp';
-import CreateRoom from '../pages/CreateRooms';
+import CreateRoom from '../pages/CreateRoom';
 import RoomList from '../pages/RoomList';
 import JoinRoom from '../pages/JoinRoom';
 function RoutesComponent() {

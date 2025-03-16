@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { GameProvider } from './contexts/GameContext';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
-import CreateRooms from './pages/CreateRooms';
+import CreateRooms from './pages/CreateRoom';
 import Home from './pages/Home';
 import RoomList from './pages/RoomList';
 import JoinRoom from './pages/JoinRoom';
