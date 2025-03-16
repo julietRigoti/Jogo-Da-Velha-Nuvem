@@ -41,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     idJogador2: {
       type: DataTypes.BIGINT,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'Jogador',
         key: 'idJogador'

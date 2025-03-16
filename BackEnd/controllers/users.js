@@ -64,7 +64,7 @@ router.post("/signup", async (req, res) => {
     } catch (err) {
         console.error("Erro ao cadastrar usuário:", err);
         return res.status(500).json({
-            mensagem: "Erro: Usuário não cadastrado com sucesso!",
+            mensagem: "Erro: Usuário não cadastrado",
             error: err.message,
         });
     }
@@ -124,7 +124,73 @@ router.put("/users/:idJogador", async (req, res) => {
     } catch (err) {
         console.error("Erro ao editar usuário:", err);
         return res.status(500).json({
-            mensagem: "Erro: Usuário não editado com sucesso!",
+            mensagem: "Erro: Usuário não editado",
+            error: err.message,
+        });
+    }
+});
+
+router.post("/create-room", async (req, res) => {
+    const {idJogador1} = req.body;
+   
+
+    try {
+        const newRoom = await db.Sala.create({
+            idJogador1,
+            idJogador2: null,
+            qtdPartidasTotal: 0,
+            resultadoTotalDasPartidas: 0
+        });
+
+        return res.status(201).json({
+            mensagem: "Sala criada com sucesso!",
+            room: newRoom,
+        });
+    } catch (err) {
+        console.error("Erro ao criar sala:", err);
+        return res.status(500).json({
+            mensagem: "Erro: Sala não criada",
+            error: err.message,
+        });
+    }
+});
+
+router.put("/join-room/:idSala", async (req, res) => {
+    const { idSala } = req.params;
+    const { idJogador2 } = req.body;
+
+    try {
+        const room = await db.Sala.findOne({
+            where: { idSala },
+        });
+
+        if (!room) {
+            return res.status(404).json({
+                mensagem: "Erro: Sala não encontrada!",
+            });
+        }
+
+        if (room.idJogador2) {
+            return res.status(400).json({
+                mensagem: "Erro: Sala já possui dois jogadores!",
+            });
+        }
+
+        const [updated] = await db.Sala.update({ idJogador2 }, { where: { idSala } });
+
+        if (updated) {
+            return res.json({
+                mensagem: "Jogador adicionado à sala com sucesso!",
+            });
+        } else {
+            return res.status(404).json({
+                mensagem: "Erro: Jogador não adicionado à sala!",
+            });
+        }
+    } catch (err) {
+        console.error("Erro ao adicionar jogador à sala:", err);
+        return res.status(500).json({
+            mensagem: "Erro ao adicionar jogador à sala.",
             error: err.message,
         });
     }
