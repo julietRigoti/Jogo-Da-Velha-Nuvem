@@ -29,7 +29,7 @@ const Login = () => {
         }),
       });
 
-      // Verificar resposta da API
+        // Verificar resposta da API
       const data = await response.json();
 
       // Verifica se o login foi bem-sucedido
@@ -45,9 +45,16 @@ const Login = () => {
       };
 
       dispatch({ type: "PLAYER", payload: player });
+      localStorage.setItem("idJogador", data.jogador.idJogador);
+      console.log("idJogador:", localStorage.getItem("idJogador"));
 
-      // Redireciona para o menu
-      navigate("/menu");
+      const pendingidSala = localStorage.getItem("pendingidSala");
+      if (pendingidSala) {
+        localStorage.removeItem("pendingidSala");
+        navigate(`/join-room/${pendingidSala}`);
+      } else {  
+        navigate("/create-room");
+      }
     } catch (error) {
       console.error("Erro no login:", error.message);
       setError(error.message); // Exibe a mensagem de erro
