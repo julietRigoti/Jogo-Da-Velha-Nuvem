@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bootstrap": "^5.3.3",
     "dotenv": "^16.4.7",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.3",

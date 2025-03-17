@@ -51,7 +51,7 @@ const SignUp = () => {
         throw new Error('Erro no servidor');
       }
 
-      navigate("/rooms");
+      navigate("/create-room");
     } catch (error) {
       console.error("Erro no cadastro:", error.message);
       setError(error.message);
