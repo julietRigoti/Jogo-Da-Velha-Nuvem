@@ -3,8 +3,10 @@ const router = express.Router();
 const db = require("./../db/models");
 const http = require('http');
 const app = express();
+const { Server } = require("socket.io");
 const server = http.createServer(app);
-const io = require(server);
+
+const io = new Server(server);
 
 // Rota para verificar se o jogador existe
 router.get("/check-player/:idJogador", async (req, res) => {
@@ -45,6 +47,7 @@ router.post("/signup", async (req, res) => {
     }
 });
 
+
 // Rota para login de jogador
 router.post("/login", async (req, res) => {
     const { emailJogador, passwordJogador } = req.body;
@@ -55,13 +58,13 @@ router.post("/login", async (req, res) => {
         });
 
         if (!jogador) {
-            return res.status(404).json({
+            return res.status(401).json({
                 mensagem: "Erro: Usuário não encontrado!",
             });
         }
 
         if (jogador.passwordJogador !== passwordJogador) {
-            return res.status(400).json({
+            return res.status(401).json({
                 mensagem: "Erro: Senha incorreta!",
             });
         }
@@ -236,32 +239,31 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('join-room', async (idSala, idJogador) => {
+        try {
+            const sala = await db.Sala.findByPk(idSala);
+            if (!sala) {
+                socket.emit('error', { message: 'Sala não encontrada!' });
+                return;
+            }
+    
+            socket.join(idSala);  // Adiciona o jogador à sala
+            console.log(`Jogador ${idJogador} entrou na sala ${idSala}`);
+    
+            // Pode enviar um evento para todos os jogadores na sala (opcional)
+            io.to(idSala).emit('player-joined', { idJogador });
+        } catch (err) {
+            socket.emit('error', { message: 'Erro ao entrar na sala' });
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('Jogador desconectado');
     });
 });
 
-socket.on('join-room', async (idSala, idJogador) => {
-    try {
-        const sala = await db.Sala.findByPk(idSala);
-        if (!sala) {
-            socket.emit('error', { message: 'Sala não encontrada!' });
-            return;
-        }
 
-        socket.join(idSala);  // Adiciona o jogador à sala
-        console.log(`Jogador ${idJogador} entrou na sala ${idSala}`);
 
-        // Pode enviar um evento para todos os jogadores na sala (opcional)
-        io.to(idSala).emit('player-joined', { idJogador });
-    } catch (err) {
-        socket.emit('error', { message: 'Erro ao entrar na sala' });
-    }
-});
 
-// Inicia o servidor HTTP com WebSocket
-server.listen(8080, () => {
-    console.log('Servidor WebSocket em execução na porta 8080');
-});
 
 module.exports = router;

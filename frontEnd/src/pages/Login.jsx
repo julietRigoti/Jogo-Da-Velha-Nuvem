@@ -55,26 +55,6 @@ const Login = () => {
       localStorage.setItem("idJogador", data.jogador.idJogador);
       console.log("idJogador:", localStorage.getItem("idJogador"));
 
-      // Estabelecendo a conexão WebSocket
-      const socket = new WebSocket("ws://localhost:8080"); // URL do seu servidor WebSocket
-      setWs(socket);
-
-      socket.onopen = () => {
-        console.log("Conexão WebSocket estabelecida!");
-        // Enviar informações do jogador assim que a conexão for estabelecida
-        socket.send(
-          JSON.stringify({
-            type: "PLAYER_CONNECTED",
-            playerId: data.jogador.idJogador,
-          })
-        );
-      };
-
-      socket.onmessage = (event) => {
-        // Lidar com as mensagens recebidas do servidor
-        const message = JSON.parse(event.data);
-        console.log("Mensagem recebida:", message);
-      };
 
       const pendingidSala = localStorage.getItem("pendingidSala");
       if (pendingidSala) {
@@ -89,15 +69,7 @@ const Login = () => {
     }
   };
 
-  // Limpeza da conexão WebSocket quando o componente for desmontado
-  useEffect(() => {
-    return () => {
-      if (ws) {
-        ws.close();
-        console.log("Conexão WebSocket fechada.");
-      }
-    };
-  }, [ws]);
+
 
   return (
     <div className={stylesHome.principalDiv}>

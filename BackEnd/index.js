@@ -4,10 +4,17 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require("http");
-const { Server } = require("socket.io");
+const {Server} = require("socket.io");
 const { Jogador, Sala, Partida, Historico } = require("./db/models"); // Importando modelos do Sequelize
+const userControler = require('./controllers/users');
 
 const app = express();
+app.use(express.json());
+app.use(cors());
+
+// Criar as rotas
+app.use('/', userControler);
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
@@ -23,7 +30,7 @@ let scores = { X: 0, O: 0 };
 let activeRooms = {}; // Armazenar salas ativas
 
 app.use(express.static("public"));
-app.use(cors());
+
 
 // Criação de sala
 io.on("connection", (socket) => {
@@ -67,7 +74,7 @@ io.on("connection", (socket) => {
                 await Historico.create({
                     idJogador: socket.id,
                     movimento: index,
-                    idPartida: activeRooms[socket.id], 
+                    idPartida: activeRooms[socket.id],
                 });
 
                 // Verifica vencedor
@@ -102,8 +109,8 @@ io.on("connection", (socket) => {
     socket.on("disconnect", async () => {
         try {
             console.log("Jogador desconectado:", socket.id);
-            await Jogador.destroy({ where: { socketId: socket.id } });
-            io.emit("playersUpdate", await getPlayersInRoom(activeRooms[socket.id]));
+            //await Jogador.destroy({ where: { socketId: socket.id } });
+            // io.emit("playersUpdate", await getPlayersInRoom(activeRooms[socket.id]));
         } catch (error) {
             console.error("Erro ao desconectar jogador:", error);
         }
@@ -143,7 +150,9 @@ async function getPlayersInRoom(idSala) {
     });
 }
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+// Inicia o servidor HTTP com WebSocket
+server.listen(8080, () => {
+    console.log('Servidor WebSocket em execução na porta 8080');
 });
+
+module.exports = io;

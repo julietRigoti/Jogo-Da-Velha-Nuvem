@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'; // Substitua useHistory por useNavigate
 import axios from 'axios';
 import io from 'socket.io-client';
 import styles from '../style/Room.module.css';
+import { GameContext } from '../contexts/GameContext';
 
 const BASE_URL = process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
@@ -12,6 +13,7 @@ const socket = io(BASE_URL);
 
 const Room = () => {
     const { idSala } = useParams(); // Captura o ID da sala pela URL
+    const {socket} = useContext(GameContext);
     const navigate = useNavigate(); // Substitua useHistory por useNavigate
     const [jogadorAtual, setJogadorAtual] = useState(null); // Jogador que acessou
     const [jogadores, setJogadores] = useState([]); // Lista de jogadores na sala

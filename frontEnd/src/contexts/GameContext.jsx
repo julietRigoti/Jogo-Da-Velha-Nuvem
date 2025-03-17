@@ -1,38 +1,61 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useReducer, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
 // URL do servidor onde o socket está rodando
 const socket = io("http://localhost:8080");
 
-const GameContext = createContext();
+// Estado inicial
+const initialState = {
+  roomId: null,
+  board: Array(9).fill(null),
+  currentPlayer: 'X',
+  scores: { X: 0, O: 0 },
+  players: [],
+};
+
+// Função reducer para gerenciar as ações do estado
+const gameReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_ROOM_ID":
+      return { ...state, roomId: action.payload };
+    case "SET_BOARD":
+      return { ...state, board: action.payload };
+    case "SET_CURRENT_PLAYER":
+      return { ...state, currentPlayer: action.payload };
+    case "SET_SCORES":
+      return { ...state, scores: action.payload };
+    case "SET_PLAYERS":
+      return { ...state, players: action.payload };
+    default:
+      return state;
+  }
+};
+
+export const GameContext = createContext(); // Exporta o GameContext
 
 export const GameProvider = ({ children }) => {
-  const [roomId, setRoomId] = useState(null);
-  const [board, setBoard] = useState(Array(9).fill(null));
-  const [currentPlayer, setCurrentPlayer] = useState('X');
-  const [scores, setScores] = useState({ X: 0, O: 0 });
-  const [players, setPlayers] = useState([]);
+  const [state, dispatch] = useReducer(gameReducer, initialState);
 
   useEffect(() => {
     // Recebe a notificação quando uma sala for criada
     socket.on("roomCreated", (id) => {
-      setRoomId(id);
+      dispatch({ type: "SET_ROOM_ID", payload: id });
       console.log(`Sala criada: ${id}`);
     });
 
     // Atribui o símbolo ao jogador
     socket.on("assignSymbol", (symbol) => {
-      setCurrentPlayer(symbol);
+      dispatch({ type: "SET_CURRENT_PLAYER", payload: symbol });
     });
 
     // Atualiza o tabuleiro quando o jogo for atualizado
     socket.on("updateBoard", (newBoard) => {
-      setBoard(newBoard);
+      dispatch({ type: "SET_BOARD", payload: newBoard });
     });
 
     // Atualiza o placar do jogo
     socket.on("updateScores", (newScores) => {
-      setScores(newScores);
+      dispatch({ type: "SET_SCORES", payload: newScores });
     });
 
     // Notifica quando o jogo termina (vitória ou empate)
@@ -43,7 +66,7 @@ export const GameProvider = ({ children }) => {
 
     // Atualiza os jogadores na sala
     socket.on("playersUpdate", (playersInRoom) => {
-      setPlayers(playersInRoom);
+      dispatch({ type: "SET_PLAYERS", payload: playersInRoom });
     });
 
     // Limpa os eventos quando o componente for desmontado
@@ -59,8 +82,8 @@ export const GameProvider = ({ children }) => {
 
   // Função para fazer uma jogada
   const makeMove = (index) => {
-    if (board[index] === null && currentPlayer) {
-      socket.emit("makeMove", { index, symbol: currentPlayer });
+    if (state.board[index] === null && state.currentPlayer) {
+      socket.emit("makeMove", { index, symbol: state.currentPlayer });
     }
   };
 
@@ -72,17 +95,14 @@ export const GameProvider = ({ children }) => {
 
   // Função para resetar o tabuleiro
   const resetBoard = () => {
-    setBoard(Array(9).fill(null));
-    setCurrentPlayer("X");
+    dispatch({ type: "SET_BOARD", payload: Array(9).fill(null) });
+    dispatch({ type: "SET_CURRENT_PLAYER", payload: "X" });
   };
 
   return (
     <GameContext.Provider value={{
-      roomId,
-      board,
-      currentPlayer,
-      scores,
-      players,
+      ...state,
+      dispatch,
       createRoom,
       makeMove,
       restartGame
