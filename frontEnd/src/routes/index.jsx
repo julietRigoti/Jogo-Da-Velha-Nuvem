@@ -4,7 +4,7 @@ import Home from '../pages/Home';
 import SignUp from '../pages/SignUp';
 import CreateRoom from '../pages/CreateRoom';
 import JoinRoom from '../pages/JoinRoom';
-import JogoDaVelha from '../pages/GameJogoVelha';
+import Room from '../pages/Room';
 function RoutesComponent() {
   return (
     <Routes>
@@ -13,7 +13,7 @@ function RoutesComponent() {
       <Route path="/signUp" element={<SignUp />} />
       <Route path='/create-room' element={<CreateRoom />} />
       <Route path='/join-room/:idSala' element={<JoinRoom />} />
-      <Route path="/game" element={<JogoDaVelha />} />
+      <Route path='/room/:idSala' element={<Room />} />
     </Routes>
   );
 }

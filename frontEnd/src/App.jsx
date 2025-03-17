@@ -6,7 +6,7 @@ import SignUp from './pages/SignUp';
 import CreateRooms from './pages/CreateRoom';
 import Home from './pages/Home';
 import JoinRoom from './pages/JoinRoom';
-
+import JogoDaVelha from './pages/GameJogoVelha';
 
 function App() {
   return (
