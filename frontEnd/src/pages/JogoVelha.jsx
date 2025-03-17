@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import { gameLoaded } from '../contexts/GameContext';
 import styles from '../style/JogoVelha.module.css';
 
-const socket = io("http://localhost:4000");
+const socket = io("http://localhost:8080");
 
 const JogoVelha = () => {
     const [board, setBoard] = useState(Array(9).fill(null));
