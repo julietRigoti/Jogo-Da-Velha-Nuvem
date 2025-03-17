@@ -1,136 +1,95 @@
-import React, { useReducer, useEffect } from 'react';
-import socketClient from 'socket.io-client';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { io } from 'socket.io-client';
 
-const socket = socketClient('http://localhost:4000', {
-    autoConnect: false,
-});
+// URL do servidor onde o socket está rodando
+const socket = io("http://localhost:8080");
 
-const GameContext = React.createContext();
+const GameContext = createContext();
 
-const reducer = (state, action) => {
-    switch (action.type) {
-        case 'CONNECTED':
-            return {
-                ...state,
-                isConnected: action.payload
-            };
-        case 'PLAYER':
-            return {
-                ...state,
-                player: action.payload
-            };
-        case 'PLAYERS':
-            return {
-                ...state,
-                players: action.payload
-            };
-        case 'ROOM':
-            return {
-                ...state,
-                room: action.payload
-            };
-        case 'ROOMS':
-            return {
-                ...state,
-                rooms: action.payload
-            };
-        case 'MATCH':
-            return {
-                ...state,
-                match: action.payload
-            };
-        case 'ADD_MESSAGE':
-            return {
-                ...state,
-                messages: [...state.messages, action.payload]
-            };
-        default:
-            return state;
+export const GameProvider = ({ children }) => {
+  const [roomId, setRoomId] = useState(null);
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [currentPlayer, setCurrentPlayer] = useState('X');
+  const [scores, setScores] = useState({ X: 0, O: 0 });
+  const [players, setPlayers] = useState([]);
+
+  useEffect(() => {
+    // Recebe a notificação quando uma sala for criada
+    socket.on("roomCreated", (id) => {
+      setRoomId(id);
+      console.log(`Sala criada: ${id}`);
+    });
+
+    // Atribui o símbolo ao jogador
+    socket.on("assignSymbol", (symbol) => {
+      setCurrentPlayer(symbol);
+    });
+
+    // Atualiza o tabuleiro quando o jogo for atualizado
+    socket.on("updateBoard", (newBoard) => {
+      setBoard(newBoard);
+    });
+
+    // Atualiza o placar do jogo
+    socket.on("updateScores", (newScores) => {
+      setScores(newScores);
+    });
+
+    // Notifica quando o jogo termina (vitória ou empate)
+    socket.on("gameOver", (result) => {
+      alert(result === "Empate" ? "Empate!" : `Jogador ${result} venceu!`);
+      resetBoard();
+    });
+
+    // Atualiza os jogadores na sala
+    socket.on("playersUpdate", (playersInRoom) => {
+      setPlayers(playersInRoom);
+    });
+
+    // Limpa os eventos quando o componente for desmontado
+    return () => {
+      socket.off();
+    };
+  }, []);
+
+  // Função para criar uma nova sala
+  const createRoom = () => {
+    socket.emit("createRoom");
+  };
+
+  // Função para fazer uma jogada
+  const makeMove = (index) => {
+    if (board[index] === null && currentPlayer) {
+      socket.emit("makeMove", { index, symbol: currentPlayer });
     }
+  };
+
+  // Função para reiniciar o jogo
+  const restartGame = () => {
+    socket.emit("restartGame");
+    resetBoard();
+  };
+
+  // Função para resetar o tabuleiro
+  const resetBoard = () => {
+    setBoard(Array(9).fill(null));
+    setCurrentPlayer("X");
+  };
+
+  return (
+    <GameContext.Provider value={{
+      roomId,
+      board,
+      currentPlayer,
+      scores,
+      players,
+      createRoom,
+      makeMove,
+      restartGame
+    }}>
+      {children}
+    </GameContext.Provider>
+  );
 };
 
-const initialState = {
-    isConnected: false,
-    player: {},
-    room: {},
-    rooms: {},
-    players: {},
-    messages: [],
-    match: {}
-};
-
-const GameProvider = (props) => {
-    const [state, dispatch] = useReducer(reducer, initialState);
-
-    useEffect(() => {
-        const onConnect = () => dispatch({ type: 'CONNECTED', payload: true });
-        const onDisconnect = () => dispatch({ type: 'CONNECTED', payload: false });
-        const onPlayersRefresh = (players) => {
-            dispatch({ type: 'PLAYERS', payload: players });
-            dispatch({ type: 'PLAYER', payload: players[socket.id] });
-        };
-        const onReceiveMessage = (receivedMessage) => {
-            dispatch({ type: 'ADD_MESSAGE', payload: receivedMessage });
-        };
-        const onRoomsRefresh = (rooms) => {
-            dispatch({ type: 'ROOMS', payload: rooms });
-        };
-        const onMatchRefresh = (match) => {
-            dispatch({ type: 'MATCH', payload: match });
-        };
-
-        socket.on('connect', onConnect);
-        socket.on('disconnect', onDisconnect);
-        socket.on('PlayersRefresh', onPlayersRefresh);
-        socket.on('ReceiveMessage', onReceiveMessage);
-        socket.on('RoomsRefresh', onRoomsRefresh);
-        socket.on('MatchRefresh', onMatchRefresh);
-
-        socket.open();
-
-        return () => {
-            socket.off('connect', onConnect);
-            socket.off('disconnect', onDisconnect);
-            socket.off('PlayersRefresh', onPlayersRefresh);
-            socket.off('ReceiveMessage', onReceiveMessage);
-            socket.off('RoomsRefresh', onRoomsRefresh);
-            socket.off('MatchRefresh', onMatchRefresh);
-        };
-    }, []);
-
-    return (
-        <GameContext.Provider value={{ ...state, dispatch }}>
-            {props.children}
-        </GameContext.Provider>
-    );
-};
-
-const sendMessage = (message) => {
-    socket.emit('SendMessage', message);
-};
-
-const createRoom = () => {
-    socket.emit('CreateRoom');
-};
-
-const leaveRoom = () => {
-    socket.emit('LeaveRoom');
-};
-
-const joinRoom = (roomId) => {
-    socket.emit('JoinRoom', roomId);
-};
-
-const gameLoaded = () => {
-    socket.emit('GameLoaded');
-};
-
-export {
-    GameContext,
-    GameProvider,
-    sendMessage,
-    createRoom,
-    leaveRoom,
-    joinRoom,
-    gameLoaded,
-};
+export const useGame = () => useContext(GameContext);
