@@ -6,7 +6,7 @@ import { GameContext } from '../contexts/GameContext'; // Importe o contexto par
 
 const BASE_URL = process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
-    : "https://meujogo.vercel.app"; // Substituir pelo link real
+    : "jogo-da-velha-nuvem-production.up.railway.app"; // Substituir pelo link real
 
     const JoinRoom = () => {
         const { idSala } = useParams(); // Pega o ID da sala da URL

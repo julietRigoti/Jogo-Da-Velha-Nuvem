@@ -4,7 +4,7 @@ import styles from '../style/Room.module.css';
 
 const BASE_URL = process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
-    : "https://meujogo.vercel.app"; // Substituir pelo link real
+    : "jogo-da-velha-nuvem-production.up.railway.app"; // Substituir pelo link real
 
 const RoomList = () => {
     const [rooms, setRooms] = useState([]);

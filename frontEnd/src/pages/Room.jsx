@@ -7,7 +7,7 @@ import { GameContext } from '../contexts/GameContext';
 
 const BASE_URL = process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
-    : "https://meujogo.vercel.app"; // Ajuste para produção
+    : "jogo-da-velha-nuvem-production.up.railway.app"; // Ajuste para produção
 
 const socket = io(BASE_URL);
 

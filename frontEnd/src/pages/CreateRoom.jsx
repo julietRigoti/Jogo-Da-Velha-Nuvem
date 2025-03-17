@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 // Conexão com o servidor WebSocket
 const socket = io(process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
-    : "https://meujogo.vercel.app");
+    : "jogo-da-velha-nuvem-production.up.railway.app");
 
 const BASE_URL = process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
