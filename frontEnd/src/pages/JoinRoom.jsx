@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import styles from '../style/Room.module.css';
 import { useNavigate, useParams } from 'react-router-dom';
+import { GameContext } from '../contexts/GameContext'; // Importe o contexto para acessar o socket
 
 const BASE_URL = process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
@@ -10,59 +11,56 @@ const BASE_URL = process.env.NODE_ENV === "development"
     const JoinRoom = () => {
         const { idSala } = useParams(); // Pega o ID da sala da URL
         const navigate = useNavigate();
+        const { socket } = useContext(GameContext); // Use o socket do contexto
         const [error, setError] = useState('');
         const [success, setSuccess] = useState(false);
     
         useEffect(() => {
-            const joinRoom = async () => {
-                const jogadorId = localStorage.getItem('idJogador'); // Verifica se o usuário está autenticado
-                console.log('jogadorId:', jogadorId);
-                try {
-                    const response = await axios.get(`${BASE_URL}/check-player/${jogadorId}`);
-                    if (!response.data.exists) {
-                        console.error('Jogador não encontrado:', response.data);
-                        localStorage.setItem('pendingidSala', idSala);
-                        navigate('/login');
-                        return;
-                    }
-                } catch (error) {
-                    console.error('Erro ao verificar jogador:', error);
-                    setError('Erro ao verificar jogador.');
+            const joinRoom = () => {
+                const idJogador = localStorage.getItem('idJogador'); // Verifica se o usuário está autenticado
+                console.log("idSala recebido:", idSala);
+                console.log("idJogador encontrado no localStorage:", idJogador);
+                
+                if (!idJogador) {
+                    localStorage.setItem('pendingidSala', idSala);
+                    navigate('/login');
                     return;
                 }
-                try {
-                    // Adiciona o jogador à sala
-                    await axios.post(`${BASE_URL}/join-room/${idSala}`, {
-                        jogadorId
-                    });
-                    // Redireciona para a sala após entrar
-                    navigate(`/room/${idSala}`);
-                } catch (error) {
-                    console.error('Erro ao entrar na sala:', error);
-                    setError('Não foi possível entrar na sala.');
-                }
+    
+                // Emite o evento 'joinRoom' para o servidor via WebSocket
+                socket.emit('joinRoom', { idJogador, idSala }, (response) => {
+                    if (response.error) {
+                        console.error('Erro ao entrar na sala:', response.error);
+                        setError('Erro ao entrar na sala. Tente novamente.');
+                    } else {
+                        setSuccess(true);
+                        navigate(`/room/${idSala}`);
+                    }
+                });
             };
     
             joinRoom();
-        }, [idSala, navigate]);
-
+        }, [idSala, navigate, socket]);
+    
         const handleJoinRoom = () => {
             navigate(`/join-room/${idSala}`);
         };
-    return (
-        <div className={styles.roomPanel}>
-            <h1>Entrar em uma Sala</h1>
-            <input
-                type="text"
-                placeholder="ID da sala"
-                value={idSala}
-                onChange={(e) => navigate(`/join-room/${e.target.value}`)}
-            />
-            <button onClick={handleJoinRoom}>Entrar na Sala</button>
-            {error && <p style={{ color: 'red' }}>{error}</p>} {/* Exibe erro, se houver */}
-            {success && <p style={{ color: 'green' }}>Você entrou na sala com sucesso!</p>}
-        </div>
-    );
-};
-
-export default JoinRoom;
+    
+        return (
+            <div className={styles.roomPanel}>
+                <h1>Entrar em uma Sala</h1>
+                <input
+                    type="text"
+                    placeholder="ID da sala"
+                    value={idSala}
+                    onChange={(e) => navigate(`/join-room/${e.target.value}`)}
+                />
+                <button onClick={handleJoinRoom}>Entrar na Sala</button>
+                {error && <p style={{ color: 'red' }}>{error}</p>} {/* Exibe erro, se houver */}
+                {success && <p style={{ color: 'green' }}>Você entrou na sala com sucesso!</p>}
+            </div>
+        );
+    };
+    
+    export default JoinRoom;
+    

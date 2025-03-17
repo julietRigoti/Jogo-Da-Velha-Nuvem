@@ -1,89 +1,108 @@
 import React, { useState, useEffect } from 'react';
-import { io } from "socket.io-client";
-import { gameLoaded } from '../contexts/GameContext';
-import styles from '../style/JogoVelha.module.css';
+import io from 'socket.io-client';
 
-const socket = io("http://localhost:4000");
+// Conectar ao servidor WebSocket
+const socket = io('http://localhost:8080');  // Certifique-se de que a URL do servidor está correta
 
-const JogoVelha = () => {
-    const [board, setBoard] = useState(Array(9).fill(null));
-    const [playerSymbol, setPlayerSymbol] = useState("-");
-    const [currentPlayer, setCurrentPlayer] = useState("-");
-    const [score, setScore] = useState({ X: 0, O: 0 });
+const JogoDaVelha = () => {
+  const [symbol, setSymbol] = useState('');
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [currentPlayer, setCurrentPlayer] = useState('X');
+  const [scores, setScores] = useState({ X: 0, O: 0 });
+  const [winner, setWinner] = useState('');
+ 
+  // Conectar ao servidor e configurar eventos
+  useEffect(() => {
+    // Se conecta ao servidor
+    socket.on('connect', () => {
+      console.log('Conectado ao servidor WebSocket!');
+      socket.emit('createRoom'); // Criar sala
+    });
 
-    useEffect(() => {
-        gameLoaded();
+    socket.on('roomCreated', (roomId) => {
+      console.log(`Sala criada com ID: ${roomId}`);
+    });
 
-        socket.on("assignSymbol", (symbol) => setPlayerSymbol(symbol));
-        socket.on("updateBoard", ({ board, currentPlayer }) => {
-            setBoard([...board]);
-            setCurrentPlayer(currentPlayer);
-        });
+    socket.on('assignSymbol', (playerSymbol) => {
+      setSymbol(playerSymbol);
+      console.log(`Seu símbolo é: ${playerSymbol}`);
+    });
 
-        socket.on("gameOver", (result) => {
-            alert(result === "Empate" ? "O jogo empatou!" : `Jogador ${result} venceu!`);
-        });
+    socket.on('updateBoard', (newBoard) => {
+      setBoard(newBoard);
+    });
 
-        socket.on("updateCurrentPlayer", setCurrentPlayer);
-        socket.on("updateScores", setScore);
-        socket.on("MatchRefresh", (match) => {
-            setBoard([...match.board]);
-            setCurrentPlayer(match.currentPlayer);
-            setScore(match.score);
-        });
+    socket.on('updateScores', (updatedScores) => {
+      setScores(updatedScores);
+    });
 
-        return () => {
-            socket.off("assignSymbol");
-            socket.off("updateBoard");
-            socket.off("gameOver");
-            socket.off("updateCurrentPlayer");
-            socket.off("updateScores");
-        };
-    }, []);
+    socket.on('updateCurrentPlayer', (player) => {
+      setCurrentPlayer(player);
+    });
 
-    const handleMove = (index) => {
-        if (!board[index] && currentPlayer === playerSymbol) {
-            socket.emit("makeMove", { index, symbol: playerSymbol });
-        }
+    socket.on('gameOver', (winner) => {
+      if (winner === 'Empate') {
+        setWinner('Empate!');
+      } else {
+        setWinner(`Jogador ${winner} venceu!`);
+      }
+    });
+
+    socket.on('restartGame', () => {
+      setBoard(Array(9).fill(null));
+      setWinner('');
+    });
+
+    // Cleanup na desconexão
+    return () => {
+      socket.off('connect');
+      socket.off('roomCreated');
+      socket.off('assignSymbol');
+      socket.off('updateBoard');
+      socket.off('updateScores');
+      socket.off('updateCurrentPlayer');
+      socket.off('gameOver');
+      socket.off('restartGame');
     };
+  }, []);
 
+  // Função para fazer jogada
+  const makeMove = (index) => {
+    if (board[index] === null && currentPlayer === symbol) {
+      socket.emit('makeMove', { index, symbol });
+    }
+  };
+
+  // Renderizar o tabuleiro
+  const renderBoard = () => {
     return (
-        <div className={styles.gameContainer}>
-            <h1 className={styles.title}>Jogo da Velha</h1>
-            <div className={styles.content}>
-                <GameBoard board={board} onMove={handleMove} />
-                <InfoPanel
-                    playerSymbol={playerSymbol}
-                    currentPlayer={currentPlayer}
-                    score={score}
-                />
-            </div>
-        </div>
+      <div id="board">
+        {board.map((value, index) => (
+          <button
+            key={index}
+            onClick={() => makeMove(index)}
+            style={{ width: '60px', height: '60px', fontSize: '24px' }}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
     );
+  };
+
+  return (
+    <div>
+      <h1>Jogo da Velha Online</h1>
+      <div id="game">
+        {renderBoard()}
+        <div id="status">
+          <p>Jogador Atual: <span>{currentPlayer}</span></p>
+          <p>Pontuação - X: <span>{scores.X}</span> | O: <span>{scores.O}</span></p>
+          <p>Vencedor: <span>{winner}</span></p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-const GameBoard = ({ board, onMove }) => (
-    <div className={styles.board}>
-        {board.map((cell, index) => (
-            <div
-                key={index}
-                className={styles.cell}
-                onClick={() => onMove(index)}
-            >
-                {cell}
-            </div>
-        ))}
-    </div>
-);
-
-const InfoPanel = ({ playerSymbol, currentPlayer, score }) => (
-    <div className={styles.infoPanel}>
-        <h2>Placar</h2>
-        <p>Vitórias X: {score.X}</p>
-        <p>Vitórias O: {score.O}</p>
-        <p>Vez de: {currentPlayer}</p>
-        <p>Seu símbolo: <span>{playerSymbol}</span></p>
-    </div>
-);
-
-export default JogoVelha;
+export default JogoDaVelha;

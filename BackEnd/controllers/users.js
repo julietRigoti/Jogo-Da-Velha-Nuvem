@@ -1,8 +1,12 @@
-// Incluir as bibliotecas
 const express = require("express");
 const router = express.Router();
 const db = require("./../db/models");
+const http = require('http');
+const app = express();
+const server = http.createServer(app);
+const io = require(server);
 
+// Rota para verificar se o jogador existe
 router.get("/check-player/:idJogador", async (req, res) => {
     const { idJogador } = req.params;
     try {
@@ -18,8 +22,7 @@ router.get("/check-player/:idJogador", async (req, res) => {
     }
 });
 
-
-// Criar a rota cadastrar
+// Rota para cadastro de jogador
 router.post("/signup", async (req, res) => {
     const { nicknameJogador, emailJogador, passwordJogador } = req.body;
 
@@ -42,7 +45,7 @@ router.post("/signup", async (req, res) => {
     }
 });
 
-// Criar a rota de login
+// Rota para login de jogador
 router.post("/login", async (req, res) => {
     const { emailJogador, passwordJogador } = req.body;
 
@@ -76,9 +79,9 @@ router.post("/login", async (req, res) => {
     }
 });
 
+// Rota para criação de sala
 router.post("/create-room", async (req, res) => {
-    const {idJogador1} = req.body;
-   
+    const { idJogador1 } = req.body;
 
     try {
         const newRoom = await db.Sala.create({
@@ -101,6 +104,7 @@ router.post("/create-room", async (req, res) => {
     }
 });
 
+// Rota para o jogador entrar em uma sala
 router.post("/join-room/:idSala", async (req, res) => {
     const { idSala } = req.params;
     const { idJogador } = req.body;
@@ -127,6 +131,7 @@ router.post("/join-room/:idSala", async (req, res) => {
     }
 });
 
+// Rota para buscar dados da sala
 router.get("/room/:idSala", async (req, res) => {
     const { idSala } = req.params;
 
@@ -167,6 +172,7 @@ router.get("/room/:idSala", async (req, res) => {
     }
 });
 
+// Rota para escolha do símbolo no jogo
 router.post("/room/:idSala/choose-symbol", async (req, res) => {
     const { idSala } = req.params;
     const { idJogador, simbolo } = req.body;
@@ -207,5 +213,55 @@ router.post("/room/:idSala/choose-symbol", async (req, res) => {
     }
 });
 
+// Configuração do WebSocket para comunicação em tempo real
+io.on('connection', (socket) => {
+    console.log('Novo jogador conectado');
+    
+    // Quando o jogador envia um movimento
+    socket.on('move', async (data) => {
+        const { idSala, idJogador, movimento } = data;
+
+        try {
+            const sala = await db.Sala.findByPk(idSala);
+            if (!sala) {
+                socket.emit('error', { message: 'Sala não encontrada!' });
+                return;
+            }
+
+            // Atualizar o estado do jogo e enviar para todos os jogadores da sala
+            io.to(idSala).emit('move', { idSala, idJogador, movimento });
+
+        } catch (error) {
+            socket.emit('error', { message: 'Erro ao processar o movimento' });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Jogador desconectado');
+    });
+});
+
+socket.on('join-room', async (idSala, idJogador) => {
+    try {
+        const sala = await db.Sala.findByPk(idSala);
+        if (!sala) {
+            socket.emit('error', { message: 'Sala não encontrada!' });
+            return;
+        }
+
+        socket.join(idSala);  // Adiciona o jogador à sala
+        console.log(`Jogador ${idJogador} entrou na sala ${idSala}`);
+
+        // Pode enviar um evento para todos os jogadores na sala (opcional)
+        io.to(idSala).emit('player-joined', { idJogador });
+    } catch (err) {
+        socket.emit('error', { message: 'Erro ao entrar na sala' });
+    }
+});
+
+// Inicia o servidor HTTP com WebSocket
+server.listen(8080, () => {
+    console.log('Servidor WebSocket em execução na porta 8080');
+});
 
 module.exports = router;

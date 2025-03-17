@@ -1,6 +1,6 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameContext } from "../contexts/GameContext";
+import { GameContext } from "../contexts/GameContext"; // Já está assim, mas vale reforçar.
 import stylesLogin from "../style/Login.module.css";
 import stylesHome from "../style/Home.module.css";
 import imagemX from "../imagens/X.gif";
@@ -12,6 +12,8 @@ const Login = () => {
   const [error, setError] = useState("");
   const { dispatch } = useContext(GameContext);
   const navigate = useNavigate();
+
+  const [ws, setWs] = useState(null); // Para armazenar a conexão WebSocket
 
   // Função para autenticar o usuário
   const handleLogin = async (e) => {
@@ -29,7 +31,12 @@ const Login = () => {
         }),
       });
 
-        // Verificar resposta da API
+      // Verificar se a resposta é JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Resposta do servidor não é JSON.");
+      }
+
       const data = await response.json();
 
       // Verifica se o login foi bem-sucedido
@@ -48,11 +55,32 @@ const Login = () => {
       localStorage.setItem("idJogador", data.jogador.idJogador);
       console.log("idJogador:", localStorage.getItem("idJogador"));
 
+      // Estabelecendo a conexão WebSocket
+      const socket = new WebSocket("ws://localhost:8080"); // URL do seu servidor WebSocket
+      setWs(socket);
+
+      socket.onopen = () => {
+        console.log("Conexão WebSocket estabelecida!");
+        // Enviar informações do jogador assim que a conexão for estabelecida
+        socket.send(
+          JSON.stringify({
+            type: "PLAYER_CONNECTED",
+            playerId: data.jogador.idJogador,
+          })
+        );
+      };
+
+      socket.onmessage = (event) => {
+        // Lidar com as mensagens recebidas do servidor
+        const message = JSON.parse(event.data);
+        console.log("Mensagem recebida:", message);
+      };
+
       const pendingidSala = localStorage.getItem("pendingidSala");
       if (pendingidSala) {
         localStorage.removeItem("pendingidSala");
         navigate(`/join-room/${pendingidSala}`);
-      } else {  
+      } else {
         navigate("/create-room");
       }
     } catch (error) {
@@ -60,6 +88,16 @@ const Login = () => {
       setError(error.message); // Exibe a mensagem de erro
     }
   };
+
+  // Limpeza da conexão WebSocket quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (ws) {
+        ws.close();
+        console.log("Conexão WebSocket fechada.");
+      }
+    };
+  }, [ws]);
 
   return (
     <div className={stylesHome.principalDiv}>
