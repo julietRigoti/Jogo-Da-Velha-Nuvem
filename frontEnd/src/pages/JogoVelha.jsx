@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
 // Conectar ao servidor WebSocket
-const socket = io('http://localhost:8080');  // Certifique-se de que a URL do servidor está correta
+const socket = io('jogo-da-velha-nuvem-production.up.railway.app');  // Certifique-se de que a URL do servidor está correta
 
 const JogoDaVelha = () => {
   const [symbol, setSymbol] = useState('');

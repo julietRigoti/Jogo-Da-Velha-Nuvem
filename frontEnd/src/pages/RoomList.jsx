@@ -13,7 +13,7 @@ const RoomList = () => {
     // Função para buscar as salas existentes
     const fetchRooms = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/create-room'); // Endpoint que deve retornar todas as salas
+            const response = await axios.get('jogo-da-velha-nuvem.up.railway.app/create-room'); // Endpoint que deve retornar todas as salas
             setRooms(response.data.rooms); // Supondo que a resposta contenha um array 'rooms'
         } catch (error) {
             console.error('Erro ao buscar as salas:', error);
