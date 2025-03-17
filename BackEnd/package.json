@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:create": "sequelize-cli db:create" 
+    "db:create": "sequelize-cli db:create"
   },
   "author": "",
   "license": "ISC",
@@ -18,7 +18,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "pg": "^8.13.3",
-    "sequelize": "^6.37.6"
+    "sequelize": "^6.37.6",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9",
