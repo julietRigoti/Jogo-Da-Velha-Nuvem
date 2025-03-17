@@ -1,12 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("./../db/models");
-const http = require('http');
 const app = express();
-const { Server } = require("socket.io");
-const server = http.createServer(app);
-
-const io = new Server(server);
 
 // Rota para verificar se o jogador existe
 router.get("/check-player/:idJogador", async (req, res) => {
@@ -46,7 +41,6 @@ router.post("/signup", async (req, res) => {
         });
     }
 });
-
 
 // Rota para login de jogador
 router.post("/login", async (req, res) => {
@@ -215,55 +209,5 @@ router.post("/room/:idSala/choose-symbol", async (req, res) => {
         });
     }
 });
-
-// Configuração do WebSocket para comunicação em tempo real
-io.on('connection', (socket) => {
-    console.log('Novo jogador conectado');
-    
-    // Quando o jogador envia um movimento
-    socket.on('move', async (data) => {
-        const { idSala, idJogador, movimento } = data;
-
-        try {
-            const sala = await db.Sala.findByPk(idSala);
-            if (!sala) {
-                socket.emit('error', { message: 'Sala não encontrada!' });
-                return;
-            }
-
-            // Atualizar o estado do jogo e enviar para todos os jogadores da sala
-            io.to(idSala).emit('move', { idSala, idJogador, movimento });
-
-        } catch (error) {
-            socket.emit('error', { message: 'Erro ao processar o movimento' });
-        }
-    });
-
-    socket.on('join-room', async (idSala, idJogador) => {
-        try {
-            const sala = await db.Sala.findByPk(idSala);
-            if (!sala) {
-                socket.emit('error', { message: 'Sala não encontrada!' });
-                return;
-            }
-    
-            socket.join(idSala);  // Adiciona o jogador à sala
-            console.log(`Jogador ${idJogador} entrou na sala ${idSala}`);
-    
-            // Pode enviar um evento para todos os jogadores na sala (opcional)
-            io.to(idSala).emit('player-joined', { idJogador });
-        } catch (err) {
-            socket.emit('error', { message: 'Erro ao entrar na sala' });
-        }
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Jogador desconectado');
-    });
-});
-
-
-
-
 
 module.exports = router;

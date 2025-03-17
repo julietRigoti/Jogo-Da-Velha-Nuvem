@@ -1,63 +1,81 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { GameContext } from '../contexts/GameContext';
+import React, { useState, useEffect } from 'react';
 import styles from '../style/Room.module.css';
+import { io } from 'socket.io-client';
+
+// Conexão com o servidor WebSocket
+const socket = io(process.env.NODE_ENV === "development"
+    ? "http://localhost:8080"
+    : "https://meujogo.vercel.app");
 
 const BASE_URL = process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
-    : "https://meujogo.vercel.app"; // Substituir pelo link real
+    : "https://meujogo.vercel.app";
 
 const Rooms = () => {
-    const { createRoom } = useContext(GameContext); // Use a função createRoom do contexto
-    const [idSala, setRoomId] = useState("");
+    const [idSala, setIdSala] = useState("");
     const [shortUrl, setShortUrl] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
+    // Função para criar uma nova sala
     const handleCreateRoom = () => {
         setError("");
         setIsLoading(true);
 
-        // Chama a função createRoom do contexto
-        createRoom((roomId) => {
-            if (!roomId) {
-                setError("Erro ao criar sala. Tente novamente.");
-                setIsLoading(false);
-                return;
-            }
+        // Simula um ID do jogador (substitua com o ID real, se necessário)
+        const idJogador = localStorage.getItem("idJogador");
+        const nicknameJogador = localStorage.getItem("nicknameJogador"); // Suponha que você tenha salvo o nickname
+        const emailJogador = localStorage.getItem("emailJogador"); // Da mesma forma, o email pode estar salvo
+        const passwordJogador = localStorage.getItem("passwordJogador"); // E a senha também
 
-            // Atualizar o estado da sala com o ID da sala retornado pelo servidor
-            setRoomId(roomId);
-            const longUrl = `${BASE_URL}/join-room/${roomId}`;
-
-            // Encurtar a URL para compartilhamento
-            try {
-                fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`)
-                    .then((response) => response.text())
-                    .then((shortUrlResponse) => {
-                        setShortUrl(shortUrlResponse);
-                    })
-                    .catch((error) => {
-                        console.error('Erro ao encurtar a URL:', error);
-                        setShortUrl(longUrl); // Se der erro, usa o link normal
-                    });
-            } catch (error) {
-                console.error('Erro ao encurtar a URL:', error);
-                setShortUrl(longUrl); // Se der erro, usa o link normal
-            }
+        if (!idJogador || !nicknameJogador || !emailJogador ||!passwordJogador) {
+            setError("Erro: Dados do jogador não encontrados.");
             setIsLoading(false);
-        });
+            return;
+          }
+
+          console.log({
+            idJogador,
+            nicknameJogador,
+            emailJogador,
+            passwordJogador,
+          });
+        
+          // Envia o evento 'createRoom' com os dados completos do jogador
+          socket.emit("createRoom", {
+            idJogador,
+            nicknameJogador,
+            emailJogador,
+            passwordJogador,
+          });
     };
 
+    // Efeito para ouvir a resposta do servidor (roomCreated)
     useEffect(() => {
-        // Ouve o evento 'roomCreated' e atualiza o estado caso a sala tenha sido criada
-        const handleRoomCreated = (roomId) => {
-            setRoomId(roomId);
+        const handleRoomCreated = (idSala) => {
+            setIdSala(idSala);
+            setIsLoading(false);
+
+            const longUrl = `${BASE_URL}/join-room/${idSala}`;
+
+            // Encurtar a URL para compartilhar
+            fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`)
+                .then((response) => response.text())
+                .then((shortUrlResponse) => {
+                    setShortUrl(shortUrlResponse);
+                })
+                .catch((error) => {
+                    console.error('Erro ao encurtar a URL:', error);
+                    setShortUrl(longUrl); // Usa a URL completa se houver erro
+                });
         };
 
-        socket.on('roomCreated', handleRoomCreated);
+        // Ouve o evento do servidor
+        socket.on("roomCreated", handleRoomCreated);
 
+        // Limpa o listener ao desmontar o componente
         return () => {
-            socket.off('roomCreated', handleRoomCreated);
+            socket.off("roomCreated", handleRoomCreated);
         };
     }, []);
 
@@ -67,7 +85,9 @@ const Rooms = () => {
             <button onClick={handleCreateRoom} disabled={isLoading}>
                 {isLoading ? 'Criando sala...' : 'Criar Nova Sala'}
             </button>
-            {error && <p style={{ color: 'red' }}>{error}</p>} {/* Exibe erro, se houver */}
+
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+
             {idSala && (
                 <>
                     <p>Compartilhe este link para convidar outras pessoas:</p>

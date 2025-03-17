@@ -37,6 +37,12 @@ export const GameProvider = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
   useEffect(() => {
+
+    socket.on("connect", () => {
+      console.log("Conectado ao servidor!", socket.id);
+    });
+
+
     // Recebe a notificação quando uma sala for criada
     socket.on("roomCreated", (id) => {
       dispatch({ type: "SET_ROOM_ID", payload: id });
@@ -69,6 +75,10 @@ export const GameProvider = ({ children }) => {
       dispatch({ type: "SET_PLAYERS", payload: playersInRoom });
     });
 
+    socket.on("login", (player) => {
+        dispatch({ type: "SET_PLAYER", payload: player});
+      });
+
     // Limpa os eventos quando o componente for desmontado
     return () => {
       socket.off();
@@ -85,6 +95,12 @@ export const GameProvider = ({ children }) => {
     if (state.board[index] === null && state.currentPlayer) {
       socket.emit("makeMove", { index, symbol: state.currentPlayer });
     }
+  };
+
+   // Função para entrar em uma sala existente
+   const joinRoom = (roomId, playerId) => {
+    socket.emit("join-room", roomId, playerId);
+    dispatch({ type: "SET_ROOM_ID", payload: roomId });
   };
 
   // Função para reiniciar o jogo
@@ -105,7 +121,8 @@ export const GameProvider = ({ children }) => {
       dispatch,
       createRoom,
       makeMove,
-      restartGame
+      restartGame, 
+      joinRoom, 
     }}>
       {children}
     </GameContext.Provider>

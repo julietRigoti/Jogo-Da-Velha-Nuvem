@@ -13,8 +13,6 @@ const Login = () => {
   const { dispatch } = useContext(GameContext);
   const navigate = useNavigate();
 
-  const [ws, setWs] = useState(null); // Para armazenar a conexão WebSocket
-
   // Função para autenticar o usuário
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -49,12 +47,15 @@ const Login = () => {
         name: data.jogador.nicknameJogador,
         id: data.jogador.idJogador,
         xp: data.jogador.pontuacaoJogadorXP,
+        email: data.jogador.emailJogador,
+        password: data.jogador.passwordJogador,
       };
 
-      dispatch({ type: "PLAYER", payload: player });
+      dispatch({ type: "SET_PLAYER", payload: player });
       localStorage.setItem("idJogador", data.jogador.idJogador);
-      console.log("idJogador:", localStorage.getItem("idJogador"));
-
+      localStorage.setItem("nicknameJogador", data.jogador.nicknameJogador);
+      localStorage.setItem("emailJogador", data.jogador.emailJogador);
+      localStorage.setItem("passwordJogador", data.jogador.passwordJogador);
 
       const pendingidSala = localStorage.getItem("pendingidSala");
       if (pendingidSala) {

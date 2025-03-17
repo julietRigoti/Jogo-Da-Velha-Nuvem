@@ -7,8 +7,6 @@ import CreateRooms from './pages/CreateRoom';
 import Home from './pages/Home';
 import JoinRoom from './pages/JoinRoom';
 
-
-
 function App() {
   return (
     <GameProvider>

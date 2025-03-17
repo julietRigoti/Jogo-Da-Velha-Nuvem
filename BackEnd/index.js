@@ -5,7 +5,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const http = require("http");
 const {Server} = require("socket.io");
-const { Jogador, Sala, Partida, Historico } = require("./db/models"); // Importando modelos do Sequelize
+const {db} = require("./db/models"); // Importando modelos do Sequelize
 const userControler = require('./controllers/users');
 
 const app = express();
@@ -31,37 +31,9 @@ let activeRooms = {}; // Armazenar salas ativas
 
 app.use(express.static("public"));
 
-
 // Criação de sala
 io.on("connection", (socket) => {
     console.log("Novo jogador conectado!");
-
-    // Criar sala
-    socket.on("createRoom", async () => {
-        try {
-            console.log("Criando nova sala...");
-            const room = await Sala.create({
-                nome: `Sala-${socket.id}`,
-            });
-
-            activeRooms[socket.id] = room.idSala;
-            socket.emit("roomCreated", room.idSala);
-            socket.join(room.idSala);
-
-            const playerSymbol = Object.keys(activeRooms).length % 2 === 0 ? "O" : "X";
-            socket.emit("assignSymbol", playerSymbol);
-
-            const player = await Jogador.create({
-                nome: `Jogador-${socket.id}`,
-                simbolo: playerSymbol,
-                idSala: room.idSala,
-            });
-
-            io.to(room.idSala).emit("playersUpdate", await getPlayersInRoom(room.idSala));
-        } catch (error) {
-            console.error("Erro ao criar sala:", error);
-        }
-    });
 
     // Jogada do jogador
     socket.on("makeMove", async ({ index, symbol }) => {
@@ -71,7 +43,7 @@ io.on("connection", (socket) => {
                 board[index] = symbol;
 
                 // Registra jogada no banco de dados (Histórico)
-                await Historico.create({
+                await db.Historico.create({
                     idJogador: socket.id,
                     movimento: index,
                     idPartida: activeRooms[socket.id],
@@ -109,12 +81,37 @@ io.on("connection", (socket) => {
     socket.on("disconnect", async () => {
         try {
             console.log("Jogador desconectado:", socket.id);
-            //await Jogador.destroy({ where: { socketId: socket.id } });
-            // io.emit("playersUpdate", await getPlayersInRoom(activeRooms[socket.id]));
         } catch (error) {
             console.error("Erro ao desconectar jogador:", error);
         }
     });
+
+    socket.on('createRoom', async (data) => {
+        const { nicknameJogador, emailJogador, idJogador, passwordJogador } = data;
+      
+        if (!nicknameJogador || !emailJogador || !idJogador || !passwordJogador) {
+          return socket.emit("error", { message: "Dados do jogador são obrigatórios." });
+        }
+      
+        try {
+          // Criação do jogador no banco de dados
+          const jogador = await db.Jogador.create({
+            nicknameJogador,
+            emailJogador,
+            idJogador,
+            passwordJogador,
+          });
+      
+          // Criação da sala com o jogador associado
+          const idSala = await criarSala(jogador);
+      
+          // Emitir para o front-end a confirmação da criação da sala
+          socket.emit("roomCreated", idSala);
+        } catch (err) {
+          console.error(err);
+          socket.emit("error", { message: err.message });
+        }
+      });
 });
 
 // Função para verificar vencedor
@@ -144,7 +141,7 @@ function resetBoard() {
 
 // Função para obter jogadores de uma sala
 async function getPlayersInRoom(idSala) {
-    return await Jogador.findAll({
+    return await db.Jogador.findAll({
         where: { idSala },
         include: [{ model: Sala }],
     });
