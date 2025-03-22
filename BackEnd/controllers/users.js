@@ -82,13 +82,12 @@ router.post("/create-room", async (req, res) => {
 
     try {
         const newRoom = await db.Sala.create({
-            idJogador1,
-            idJogador2: null,
-            qtdPartidasTotal: 0,
-            resultadoTotalDasPartidas: 0
+            idJogadorCriouPartida: idJogador1,
+            dataCriacao: new Date(),
+            qtdPartidas: 0,
         });
 
-        return res.status(201).json({
+        return res.json({
             mensagem: "Sala criada com sucesso!",
             room: newRoom,
         });

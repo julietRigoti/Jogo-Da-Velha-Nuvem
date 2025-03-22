@@ -20,7 +20,7 @@ const Login = () => {
 
     try {
       // Requisição para a rota de login do back-end
-      const response = await fetch("jogo-da-velha-nuvem.up.railway.app/login", {
+      const response = await fetch("http://localhost:8080/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

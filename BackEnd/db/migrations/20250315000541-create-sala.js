@@ -10,41 +10,17 @@ module.exports = {
         autoIncrement: true,
         allowNull: false,
       },
-      idJogador1: {
-        type: Sequelize.BIGINT,
+      idJogadorCriouSala: {
+        type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Jogador', // Nome da tabela referenciada
-          key: 'idJogador'  // Chave primária da tabela Jogador
+          model: 'Jogador',  // Nome da tabela referenciada
+          key: 'idJogador'   // Chave primária da tabela Jogador
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
-      idJogador2: {
-        type: Sequelize.BIGINT,
-        allowNull: false,
-        references: {
-          model: 'Jogador',
-          key: 'idJogador'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        onUpdate: 'CASCADE',  // Caso o idJogador seja alterado, atualiza a chave estrangeira
+        onDelete: 'CASCADE'   // Se o jogador for deletado, apaga os registros associados
       },
       qtdPartidasTotal: {
-        type: Sequelize.BIGINT,
-        allowNull: true
-      },
-      idHistorico: {
-        type: Sequelize.BIGINT,
-        allowNull: true,
-        references: {
-          model: 'Historico',
-          key: 'idHistorico'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
-      },
-      resultadoTotalDasPartidas: {
         type: Sequelize.BIGINT,
         allowNull: true
       },

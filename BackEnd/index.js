@@ -1,11 +1,11 @@
 // index.js (servidor Express)
+const express = require('express'); // Framework Express para criar servidores web
+const cors = require('cors'); // Middleware para permitir requisições de outros domínios
+const bodyParser = require('body-parser'); // Middleware que ajuda a processar dados do corpo da requisição
+const { db } = require('./db/models'); // Importando modelos do Sequelize
+const http = require("http"); // Módulo HTTP nativo do Node.js
+const {Server} = require("socket.io"); // Importando classe Server do Socket.IO
 
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const http = require("http");
-const {Server} = require("socket.io");
-const {db} = require("./db/models"); // Importando modelos do Sequelize
 const userControler = require('./controllers/users');
 
 const app = express();
@@ -43,11 +43,11 @@ io.on("connection", (socket) => {
                 board[index] = symbol;
 
                 // Registra jogada no banco de dados (Histórico)
-                await db.Historico.create({
+                /*await db.Historico.create({
                     idJogador: socket.id,
                     movimento: index,
                     idPartida: activeRooms[socket.id],
-                });
+                });*/
 
                 // Verifica vencedor
                 const winner = checkWinner();
@@ -149,7 +149,7 @@ async function getPlayersInRoom(idSala) {
 
 // Inicia o servidor HTTP com WebSocket
 server.listen(8080, () => {
-    console.log('Servidor WebSocket em execução na porta 8080');
+    console.log('Servidor rodando na porta 8080');
 });
 
 module.exports = io;

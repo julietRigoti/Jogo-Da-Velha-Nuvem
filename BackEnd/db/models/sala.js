@@ -6,20 +6,8 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // Relacionamento com o Jogador1
       Sala.belongsTo(models.Jogador, {
-        foreignKey: 'idJogador1',
-        as: 'jogador1'
-      });
-
-      // Relacionamento com o Jogador2
-      Sala.belongsTo(models.Jogador, {
-        foreignKey: 'idJogador2',
-        as: 'jogador2'
-      });
-
-      // Relacionamento com o Histórico
-      Sala.belongsTo(models.Historico, {
-        foreignKey: 'idHistorico',
-        as: 'historico'
+        foreignKey: 'idJogadorCriouSala',  // Campo que referencia Jogador
+        as: 'jogador1'             // Nome do alias
       });
     }
   }
@@ -31,35 +19,15 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
       allowNull: false,
     },
-    idJogador1: {
-      type: DataTypes.BIGINT,
+    idJogadorCriouSala: {
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Jogador',
-        key: 'idJogador'
-      }
-    },
-    idJogador2: {
-      type: DataTypes.BIGINT,
-      allowNull: true,
-      references: {
-        model: 'Jogador',
-        key: 'idJogador'
+        model: 'Jogador',  // Nome da tabela que está sendo referenciada
+        key: 'idJogador'   // Chave primária da tabela referenciada
       }
     },
     qtdPartidasTotal: {
-      type: DataTypes.BIGINT,
-      allowNull: true
-    },
-    idHistorico: {
-      type: DataTypes.BIGINT,
-      allowNull: true,
-      references: {
-        model: 'Historico',
-        key: 'idHistorico'
-      }
-    },
-    resultadoTotalDasPartidas: {
       type: DataTypes.BIGINT,
       allowNull: true
     },
