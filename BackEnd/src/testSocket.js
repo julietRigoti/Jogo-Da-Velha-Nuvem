@@ -1,8 +1,8 @@
 const { io } = require('socket.io-client');
 
-const player1Token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZEpvZ2Fkb3IiOjMsImlhdCI6MTc0MjkzNzIwNywiZXhwIjoxNzQyOTQ0NDA3fQ.d8z6g_OR5buV3HDSbd6KAKpYDJh2pmyZyEWVMIw_eRk';
+const player1Token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZEpvZ2Fkb3IiOjgsImlhdCI6MTc0Mjk1MDg0NSwiZXhwIjoxNzQyOTU4MDQ1fQ.21OjA04_DsFlqEUPqRJJs7xeljst7MQmR4ixrG9iapU';
 
-const player2Token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZEpvZ2Fkb3IiOjQsImlhdCI6MTc0MjkzNzIzMCwiZXhwIjoxNzQyOTQ0NDMwfQ.qaqP_JTVDI_6q_tS_AKTVNE0lNOK3CKHOdN3HdKNXkk';
+const player2Token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZEpvZ2Fkb3IiOjksImlhdCI6MTc0Mjk1MDg4MCwiZXhwIjoxNzQyOTU4MDgwfQ.Q3fETNRhFuG8bzibUJejSbAS6uTQNQPFDMWIfkCQTdQ';
 
 // Função para criar uma conexão autenticada
 function conectarSocket(token) {
