@@ -34,22 +34,25 @@ const Login = () => {
       }
 
       // Salva o token JWT no localStorage
-      localStorage.setItem("token", data.token);
+      const jwtToken = data.token;
+      localStorage.setItem("jwtToken", data.token);
 
-      // Atualiza o estado do jogador no contexto
-      dispatch({ 
-        type: "SET_PLAYER", 
-        payload: { email: email } // Apenas email (evita expor mais dados do necessário)
+      // Guarda as informações do jogador no contexto
+      dispatch({
+        type: "SET_PLAYER",
+        payload: { id: data.idJogador, nickname: data.nicknameJogador },
       });
+      
+     // Navega para a página de criar sala passando os dados do jogador
+     navigate("/create-room", { 
+        state: {
+          idJogador: localStorage.getItem("idJogador"),
+          nicknameJogador: localStorage.getItem("nicknameJogador"),
+          jwtToken: jwtToken // Passa o token JWT para a próxima página
+        }
+     });
 
-      // Redireciona para a sala apropriada
-      const pendingidSala = localStorage.getItem("pendingidSala");
-      if (pendingidSala) {
-        localStorage.removeItem("pendingidSala");
-        navigate(`/join-room/${pendingidSala}`);
-      } else {
-        navigate("/create-room");
-      }
+      
     } catch (error) {
       console.error("Erro no login:", error.message);
       setError(error.message); // Exibe erro na tela

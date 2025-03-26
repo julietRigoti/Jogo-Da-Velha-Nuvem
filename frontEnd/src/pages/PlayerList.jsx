@@ -1,22 +1,17 @@
 import React from 'react';
-import styles from '../style/PlayerList.module.css';
 
-const BASE_URL = process.env.NODE_ENV === "development"
-    ? "http://localhost:8080"
-    : "jogo-da-velha-nuvem-production.up.railway.app"; // Ajuste para produção
-
-const PlayerList = ({ players }) => {
+const PlayerList = (props) => {
+    console.log("Dados recebidos pelo PlayerList:", props.players);
+        
     return (
-        <div className={styles.listGroup}>
-            <span className={styles.listTitle}>JOGADORES</span>
-
-            {Object.keys(players).map((key) => (
-                <div key={key} className={styles.listItem}>
-                    {players[key].name}
-                </div>
-            ))}
+        <div >
+            {Object.keys(props.players)
+                .map((key) => (
+                    <div key={key}>{props.players[key].name}</div>
+                ))
+            }
         </div>
     );
-};
+};  
 
 export default PlayerList;

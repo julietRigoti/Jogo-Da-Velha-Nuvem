@@ -5,36 +5,56 @@ const Redis = require("ioredis");
 // Conexão com o Redis - Redis é um banco de dados em memória que armazena dados-chave e valores em cache para melhorar o desempenho do aplicativo em tempo real
 const redis = new Redis();
 
+const game = {
+  players: {} // Armazena os jogadores conectados
+};
+
 module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log(`🎮 Novo jogador conectado: ${socket.id}`);
 
+    // Nessa parte sera criado uma lista de players que se conectaram ao servidor
+    // e sera enviado para todos os clientes conectados
+    const name = socket.idJogador || `Jogador ${Math.floor(Math.random() * 1000)}`;
+    game.players[socket.id] = { name };
+    refreshPlayers(io);
+    console.log("Jogadores no server");
+    console.log(game);
+
+
+
+
     // Middleware para autenticação JWT
     socket.use((packet, next) => {
-        console.debug("🔍 Middleware de autenticação JWT iniciado.");
-        console.debug("🔍 socket.handshake.auth:", socket.handshake.auth); // ✅ Verificar todo o objeto de autenticação
-        
-        const token = socket.handshake.auth.token;
-        console.debug("🔍 Token recebido:", token);
-        
-        if (!token) {
-          console.debug("⚠️ Token não fornecido.");
-          return next(new Error("Token não fornecido"));
+      console.debug("🔍 Middleware de autenticação JWT iniciado.");
+      console.debug("🔍 socket.handshake.auth:", socket.handshake.auth); // ✅ Verificar todo o objeto de autenticação
+
+      const token = socket.handshake.auth.token;
+      console.debug("🔍 Token recebido:", token);
+
+      if (!token) {
+        console.debug("⚠️ Token não fornecido.");
+        return next(new Error("Token não fornecido"));
+      }
+
+      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+          console.debug("⚠️ Erro ao verificar token:", err.message);
+          return next(new Error("Token inválido"));
         }
-      
-        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-          if (err) {
-            console.debug("⚠️ Erro ao verificar token:", err.message);
-            return next(new Error("Token inválido"));
-          }
-          console.debug("✅ Token verificado com sucesso:", decoded);
-          socket.user = decoded; // Armazena o usuário autenticado
-          next();
-        });
+        console.debug("✅ Token verificado com sucesso:", decoded);
+        socket.user = decoded; // Armazena o usuário autenticado
+        next();
       });
+    });
 
     // Criar uma nova sala e salvar no Redis e no Banco de Dados
     socket.on("criarSala", async ({ nicknameJogador }, callback) => {
+      if (!socket.user || !socket.user.idJogador) {
+        console.debug("⚠️ Usuário não autenticado corretamente.");
+        return callback({ sucesso: false, mensagem: "Usuário não autenticado." });
+      }
+
       try {
         console.debug("🔍 Evento criarSala recebido:", { nicknameJogador });
 
@@ -92,6 +112,11 @@ module.exports = (io) => {
 
     // Entrar em uma sala
     socket.on("entrarSala", async ({ idSala, nicknameJogador }, callback) => {
+      if (!socket.user || !socket.user.idJogador) {
+        console.debug("⚠️ Usuário não autenticado corretamente.");
+        return callback({ sucesso: false, mensagem: "Usuário não autenticado." });
+      }
+
       try {
         console.debug("🔍 Evento entrarSala recebido:", {
           idSala,
@@ -234,6 +259,99 @@ module.exports = (io) => {
       }
     });
 
+
+
+
+    // =====================================================================
+    socket.on("LeaveRoom", async () => {
+      try {
+        const roomId = game.players[socket.id].room;
+        if (!roomId) return;
+
+        console.debug("🔍 Evento LeaveRoom recebido:", { roomId });
+
+        // Atualizar o estado da sala no Redis
+        const salaJSON = await redis.get(`sala:${roomId}`);
+        if (!salaJSON) return;
+
+        const sala = JSON.parse(salaJSON);
+        if (sala.jogador1.id === socket.user.idJogador) {
+          sala.jogador1 = null;
+        } else if (sala.jogador2?.id === socket.user.idJogador) {
+          sala.jogador2 = null;
+        }
+
+        // Atualizar no Redis
+        await redis.set(`sala:${roomId}`, JSON.stringify(sala));
+
+        // Sair da sala
+        socket.leave(roomId);
+        game.players[socket.id].room = null;
+
+        console.log(`🔴 Jogador saiu da sala: ${roomId}`);
+
+        // Atualizar a lista de jogadores e salas
+        refreshPlayers();
+        refreshRooms();
+      } catch (error) {
+        console.error("Erro ao sair da sala:", error);
+        socket.emit("erro", { mensagem: "Erro ao sair da sala." });
+      }
+    });
+
+    socket.on("JoinRoom", async (roomId) => {
+      try {
+        console.debug("🔍 Evento JoinRoom recebido:", { roomId });
+
+        // Verificar se a sala existe no Redis
+        const salaJSON = await redis.get(`sala:${roomId}`);
+        if (!salaJSON) {
+          console.debug("⚠️ Sala não encontrada:", { roomId });
+          return socket.emit("erro", { mensagem: "Sala não encontrada." });
+        }
+
+        const sala = JSON.parse(salaJSON);
+        if (sala.jogador1.id === socket.user.idJogador || sala.jogador2?.id === socket.user.idJogador) {
+          return socket.emit("erro", { mensagem: "Você já está nessa sala." });
+        }
+
+        // Verificar se a sala tem espaço para um segundo jogador
+        if (sala.jogador2) {
+          console.debug("⚠️ Sala já está cheia:", { roomId });
+          return socket.emit("erro", { mensagem: "Sala já está cheia." });
+        }
+
+        // Adicionar jogador à sala
+        const jogador = {
+          idJogador: socket.user.idJogador,
+          nickname: game.players[socket.id].name,
+        };
+
+        sala.jogador2 = {
+          id: jogador.idJogador,
+          nickname: jogador.nickname,
+          simbolo: "O",
+        };
+
+        // Atualizar a sala no Redis
+        await redis.set(`sala:${roomId}`, JSON.stringify(sala));
+
+        // Adicionar o jogador à sala
+        socket.join(roomId);
+        game.players[socket.id].room = roomId;
+
+        console.log(`🟢 Jogador entrou na sala: ${roomId}`);
+        io.to(roomId).emit("atualizarSala", sala); // Enviar atualização para a sala
+        sendMessage(game.players[socket.id], 'entrou numa sala');
+
+        refreshPlayers();
+        refreshRooms();
+      } catch (error) {
+        console.error("Erro ao entrar na sala:", error);
+        socket.emit("erro", { mensagem: "Erro ao entrar na sala." });
+      }
+    });
+
     // Jogador desconectado
     socket.on("disconnect", async () => {
       console.log(`🔴 Jogador desconectado: ${socket.id}`);
@@ -248,8 +366,11 @@ module.exports = (io) => {
         }
         await redis.set(salaKey, JSON.stringify(sala));
       }
+      delete game.players[socket.id];
+      refreshPlayers();
     });
   });
+
 
   // Função auxiliar para verificar o vencedor
   function verificarVencedor(tabuleiro) {
@@ -276,3 +397,42 @@ module.exports = (io) => {
     return null;
   }
 };
+
+const refreshPlayers = async (io) => {
+  try {
+    // Recupere todos os jogadores conectados a partir do Redis
+    const playersKeys = await redis.keys("player:*"); // Exemplo de chave de jogador no Redis
+    const players = [];
+
+    for (let key of playersKeys) {
+      const player = JSON.parse(await redis.get(key)); // Supondo que o jogador esteja armazenado no Redis
+      players.push(player);
+    }
+
+    // Enviar a lista de jogadores para todos os clientes conectados
+    io.emit('PlayersRefresh', game.players);
+    console.debug("🔄 Lista de jogadores atualizada e enviada.");
+  } catch (error) {
+    console.error("Erro ao atualizar jogadores:", error);
+  }
+};
+
+const refreshRooms = async () => {
+  try {
+    // Recupere todas as salas ativas do Redis
+    const roomKeys = await redis.keys("sala:*"); // Exemplo de chave de sala no Redis
+    const rooms = [];
+
+    for (let key of roomKeys) {
+      const room = JSON.parse(await redis.get(key)); // Recupera o estado da sala
+      rooms.push(room);
+    }
+
+    // Enviar a lista de salas para todos os clientes conectados
+    io.emit('RoomsRefresh', rooms);
+    console.debug("🔄 Lista de salas atualizada e enviada.");
+  } catch (error) {
+    console.error("Erro ao atualizar salas:", error);
+  }
+};
+
