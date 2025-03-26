@@ -10,16 +10,21 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:create": "sequelize-cli db:create"
+    "create": "sequelize-cli db:create"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "bootstrap": "^5.3.3",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "ioredis": "^5.6.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.3",
-    "sequelize": "^6.37.6"
+    "postgresql": "^0.0.1",
+    "sequelize": "^6.37.6",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "express": "^4.21.2",

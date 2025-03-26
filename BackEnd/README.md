@@ -2,10 +2,10 @@ Para rodar o docker-compose, executar o comando abaixo
 ### docker-compose up -d 
 
 Parar criar o banco de dados, executar o comando abaixo
-### npm run db:create
+### npm run create
 
 Para criar as tabelas no banco de dados, executar o comando abaixo
-### npm run db:migrate
+### npm run migrate
 
 Criar o arquivo package
 ### npm init

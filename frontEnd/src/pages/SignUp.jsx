@@ -29,12 +29,13 @@ const SignUp = () => {
 
     // Verificar se as senhas coincidem
     if (formData.passwordJogador !== formData.confirmPassword) {
-      alert("As senhas não coincidem!");
+      setError("As senhas não coincidem!");
+      return;
     }
 
     try {
-      // Requisição para o endpoint do backend
-      const response = await fetch("http://localhost:8080/signup", {
+      // Requisição para o backend
+      const response = await fetch("http://localhost:8080/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -45,12 +46,17 @@ const SignUp = () => {
       });
 
       const data = await response.json();
-      console.log('Usuário cadastrado:', data);
 
       if (!response.ok) {
-        throw new Error('Erro no servidor');
+        throw new Error(data.message || "Erro no servidor");
       }
 
+      // Armazena o token JWT no localStorage para autenticação
+      localStorage.setItem("token", data.token);
+
+      console.log("Usuário cadastrado com sucesso:", data);
+      
+      // Redireciona para a página de criação de sala
       navigate("/create-room");
     } catch (error) {
       console.error("Erro no cadastro:", error.message);

@@ -17,7 +17,7 @@ const basename = path.basename(__filename);
 // Verificar se deve utilizar a variavel global ou 'development'
 const env = process.env.NODE_ENV || 'development';
 // Incluir o arquivo
-const config = require(__dirname + '/../config/database.js')[env];
+const config = require(path.join(__dirname, '../db/config/database.js'))[env];
 // Criar a constate com objeto vazio
 const db = {};
 

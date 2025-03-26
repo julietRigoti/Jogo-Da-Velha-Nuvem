@@ -1,6 +1,6 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameContext } from "../contexts/GameContext"; // Já está assim, mas vale reforçar.
+import { GameContext } from "../contexts/GameContext"; 
 import stylesLogin from "../style/Login.module.css";
 import stylesHome from "../style/Home.module.css";
 import imagemX from "../imagens/X.gif";
@@ -19,44 +19,30 @@ const Login = () => {
     setError(""); // Limpa mensagens de erro anteriores
 
     try {
-      // Requisição para a rota de login do back-end
-      const response = await fetch("http://localhost:8080/login", {
+      // Requisição para a rota de login do backend
+      const response = await fetch("http://localhost:8080/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          emailJogador: email,
-          passwordJogador: password,
-        }),
+        body: JSON.stringify({ emailJogador: email, passwordJogador: password }),
       });
-
-      // Verificar se a resposta é JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Resposta do servidor não é JSON.");
-      }
 
       const data = await response.json();
 
-      // Verifica se o login foi bem-sucedido
+      // Se o login falhar, lança erro
       if (!response.ok) {
-        throw new Error(data.mensagem || "Erro ao fazer login.");
+        throw new Error(data.message || "Erro ao fazer login.");
       }
 
-      // Salva os dados do jogador no contexto
-      const player = {
-        name: data.jogador.nicknameJogador,
-        id: data.jogador.idJogador,
-        xp: data.jogador.pontuacaoJogadorXP,
-        email: data.jogador.emailJogador,
-        password: data.jogador.passwordJogador,
-      };
+      // Salva o token JWT no localStorage
+      localStorage.setItem("token", data.token);
 
-      dispatch({ type: "SET_PLAYER", payload: player });
-      localStorage.setItem("idJogador", data.jogador.idJogador);
-      localStorage.setItem("nicknameJogador", data.jogador.nicknameJogador);
-      localStorage.setItem("emailJogador", data.jogador.emailJogador);
-      localStorage.setItem("passwordJogador", data.jogador.passwordJogador);
+      // Atualiza o estado do jogador no contexto
+      dispatch({ 
+        type: "SET_PLAYER", 
+        payload: { email: email } // Apenas email (evita expor mais dados do necessário)
+      });
 
+      // Redireciona para a sala apropriada
       const pendingidSala = localStorage.getItem("pendingidSala");
       if (pendingidSala) {
         localStorage.removeItem("pendingidSala");
@@ -66,11 +52,9 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Erro no login:", error.message);
-      setError(error.message); // Exibe a mensagem de erro
+      setError(error.message); // Exibe erro na tela
     }
   };
-
-
 
   return (
     <div className={stylesHome.principalDiv}>
@@ -90,7 +74,7 @@ const Login = () => {
               className={stylesLogin.formControl}
               placeholder="Digite seu e-mail"
               value={email}
-              onChange={(e) => setEmail(e.target.value)} // Atualiza email
+              onChange={(e) => setEmail(e.target.value)} 
               required
             />
           </div>
@@ -104,7 +88,7 @@ const Login = () => {
               className={stylesLogin.formControl}
               placeholder="Digite sua senha"
               value={password}
-              onChange={(e) => setPassword(e.target.value)} // Atualiza senha
+              onChange={(e) => setPassword(e.target.value)} 
               required
             />
           </div>
@@ -121,16 +105,8 @@ const Login = () => {
         </div>
       </div>
 
-      <img
-        className={stylesHome.imagemX}
-        src={imagemX}
-        alt="Pixelart tabuleiro com X"
-      />
-      <img
-        className={stylesHome.imagemO}
-        src={imagemO}
-        alt="Pixelart tabuleiro com O"
-      />
+      <img className={stylesHome.imagemX} src={imagemX} alt="Pixelart tabuleiro com X" />
+      <img className={stylesHome.imagemO} src={imagemO} alt="Pixelart tabuleiro com O" />
     </div>
   );
 };
