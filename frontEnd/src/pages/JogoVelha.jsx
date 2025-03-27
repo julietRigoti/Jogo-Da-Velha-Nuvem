@@ -1,71 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import io from 'socket.io-client';
-import styles from '../style/JogoVelha.module.css'; // Importando o CSS
+import styles from '../style/JogoVelha.module.css';
 
 const JogoDaVelha = () => {
+  const [socket, setSocket] = useState(null);
   const [symbol, setSymbol] = useState('');
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState('X');
   const [scores, setScores] = useState({ X: 0, O: 0 });
   const [winner, setWinner] = useState('');
-  const location = useLocation();
   const { idSala } = useParams();
-  
-  console.log("ID da Sala: ", idSala);
 
-  // Recupera o socket do localStorage
+  // Inicializa o WebSocket
   useEffect(() => {
-    let storedSocket = localStorage.getItem("socket");
+    const newSocket = io("http://localhost:8080", {
+      auth: { token: localStorage.getItem("jwtToken") }
+    });
 
-    if (!storedSocket) return;
+    setSocket(newSocket);
 
-    const socket = JSON.parse(storedSocket);
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
 
-    if (!idSala) return;
+  // Gerencia eventos WebSocket
+  useEffect(() => {
+    if (!socket || !idSala) return;
 
     console.log(`Entrando na sala: ${idSala}`);
-    socket.emit('joinRoom', idSala);
+    socket.emit("joinRoom", idSala);
 
-    socket.on('assignSymbol', (playerSymbol) => {
+    socket.on("assignSymbol", (playerSymbol) => {
       setSymbol(playerSymbol);
       console.log(`Seu símbolo é: ${playerSymbol}`);
     });
 
-    socket.on('updateBoard', (newBoard) => {
-      setBoard(newBoard);
+    socket.on("updateBoard", (newBoard) => setBoard(newBoard));
+    socket.on("updateScores", (updatedScores) => setScores(updatedScores));
+    socket.on("updateCurrentPlayer", (player) => setCurrentPlayer(player));
+
+    socket.on("gameOver", (winner) => {
+      setWinner(winner === "Empate" ? "Empate!" : `Jogador ${winner} venceu!`);
     });
 
-    socket.on('updateScores', (updatedScores) => {
-      setScores(updatedScores);
-    });
-
-    socket.on('updateCurrentPlayer', (player) => {
-      setCurrentPlayer(player);
-    });
-
-    socket.on('gameOver', (winner) => {
-      setWinner(winner === 'Empate' ? 'Empate!' : `Jogador ${winner} venceu!`);
-    });
-
-    socket.on('restartGame', () => {
+    socket.on("restartGame", () => {
       setBoard(Array(9).fill(null));
-      setWinner('');
+      setWinner("");
     });
 
     return () => {
-      socket.off('assignSymbol');
-      socket.off('updateBoard');
-      socket.off('updateScores');
-      socket.off('updateCurrentPlayer');
-      socket.off('gameOver');
-      socket.off('restartGame');
+      socket.off("assignSymbol");
+      socket.off("updateBoard");
+      socket.off("updateScores");
+      socket.off("updateCurrentPlayer");
+      socket.off("gameOver");
+      socket.off("restartGame");
     };
-  }, [idSala]);
+  }, [socket, idSala]);
 
   const makeMove = (index) => {
+    if (!socket) {
+      console.error("Socket não está conectado.");
+      return;
+    }
+
     if (board[index] === null && currentPlayer === symbol) {
-      socket.emit('makeMove', { index, symbol, idSala });
+      socket.emit("makeMove", { index, symbol, idSala });
     }
   };
 

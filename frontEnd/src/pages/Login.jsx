@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameContext } from "../contexts/GameContext"; 
+import { GameContext } from "../contexts/GameContext";
 import stylesLogin from "../style/Login.module.css";
 import stylesHome from "../style/Home.module.css";
 import imagemX from "../imagens/X.gif";
@@ -16,46 +16,48 @@ const Login = () => {
   // Função para autenticar o usuário
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Limpa mensagens de erro anteriores
-
+    setError(""); 
+  
     try {
-      // Requisição para a rota de login do backend
       const response = await fetch("http://localhost:8080/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emailJogador: email, passwordJogador: password }),
       });
-
+  
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Erro ao fazer login.");
 
-      // Se o login falhar, lança erro
-      if (!response.ok) {
-        throw new Error(data.message || "Erro ao fazer login.");
-      }
+      const { jogador, token } = data;
 
-      // Salva o token JWT no localStorage
-      const jwtToken = data.token;
-      localStorage.setItem("jwtToken", data.token);
+      console.log("Token JWT:", token);
+      console.log("ID do jogador:", jogador.idJogador);
+      console.log("Nickname do jogador:", jogador.nicknameJogador);
 
-      // Guarda as informações do jogador no contexto
-      dispatch({
-        type: "SET_PLAYER",
-        payload: { id: data.idJogador, nickname: data.nicknameJogador },
-      });
-      
-     // Navega para a página de criar sala passando os dados do jogador
-     navigate("/create-room", { 
+
+      // Salva dados do usuário
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("idJogador", jogador.idJogador);
+      sessionStorage.setItem("nicknameJogador", jogador.nicknameJogador);
+
+      console.log("Dados para saber se o setItem funcionou: ", sessionStorage.getItem("token"), sessionStorage.getItem("idJogador"), sessionStorage.getItem("nicknameJogador"));
+
+  
+      // Atualiza estado global do jogador
+      dispatch({ type: "SET_PLAYER", payload: { id: data.idJogador, nickname: data.nicknameJogador }});
+  
+      // Redireciona para a criação de sala
+      navigate("/create-room", {
         state: {
-          idJogador: localStorage.getItem("idJogador"),
-          nicknameJogador: localStorage.getItem("nicknameJogador"),
-          jwtToken: jwtToken // Passa o token JWT para a próxima página
-        }
-     });
-
-      
+          idJogador: sessionStorage.getItem("idJogador"),
+          nicknameJogador: sessionStorage.getItem("nicknameJogador"),
+          jwtToken: sessionStorage.getItem("token"),
+        },
+      });
+  
     } catch (error) {
       console.error("Erro no login:", error.message);
-      setError(error.message); // Exibe erro na tela
+      setError(error.message);
     }
   };
 
@@ -77,7 +79,7 @@ const Login = () => {
               className={stylesLogin.formControl}
               placeholder="Digite seu e-mail"
               value={email}
-              onChange={(e) => setEmail(e.target.value)} 
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -91,7 +93,7 @@ const Login = () => {
               className={stylesLogin.formControl}
               placeholder="Digite sua senha"
               value={password}
-              onChange={(e) => setPassword(e.target.value)} 
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>

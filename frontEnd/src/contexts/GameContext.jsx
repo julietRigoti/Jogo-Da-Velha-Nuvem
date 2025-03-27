@@ -3,6 +3,9 @@ import socketClient from 'socket.io-client';
 
 const socket = socketClient('http://localhost:8080', {
     autoConnect: false,
+    auth: {
+        token: localStorage.getItem("jwtToken")
+    }
 });
 
 const GameContext = React.createContext();
@@ -23,9 +26,9 @@ const reducer = (state, action) => {
             return {
                 ...state,
                 player: {
-                    id: action.payload.id, 
-                    nickname: action.payload.nickname, 
-                    jwtToken: action.payload.jwtToken 
+                    id: action.payload.id,
+                    nickname: action.payload.nickname,
+                    jwtToken: action.payload.jwtToken
                 }
             };
         case 'PLAYERS':
@@ -34,9 +37,10 @@ const reducer = (state, action) => {
                 players: action.payload
             };
         case 'ROOM':
+            const player = state.players[action.payload];
             return {
                 ...state,
-                room: state.rooms[state.players[action.payload].room]
+                room: player ? player.room : null
             };
         case 'ROOMS':
             return {
@@ -72,15 +76,20 @@ const GameProvider = (props) => {
             dispatch({ type: 'CONNECTED', payload: false });
         });
         socket.on('PlayersRefresh', (players) => {
-            dispatch({ type: 'PLAYERS', payload: players });
-            dispatch({ type: 'PLAYER', payload: players[socket.id] });
+            if (socket.id && players[socket.id]) {
+                dispatch({ type: 'PLAYER', payload: players[socket.id] });
+            }
         });
         socket.on('RoomsRefresh', (rooms) => {
             dispatch({ type: 'ROOMS', payload: rooms });
             dispatch({ type: 'ROOM', payload: socket.id });
         });
 
-        socket.open();
+        const token = localStorage.getItem("jwtToken");
+        if (token) {
+            socket.auth.token = token;
+            socket.open();
+        }
     }, []);
 
     return (
@@ -91,7 +100,9 @@ const GameProvider = (props) => {
 };
 
 const createRoom = () => {
-    socket.emit('criarSala');
+    if (state.player.nickname) {
+        socket.emit('criarSala', { nicknameJogador: state.player.nickname });
+    }
 };
 
 const leaveRoom = () => {
@@ -99,9 +110,10 @@ const leaveRoom = () => {
 };
 
 const joinRoom = (roomId) => {
-    socket.emit('JoinRoom', roomId);
+    if (state.player.nickname) {
+        socket.emit('JoinRoom', { idSala: roomId, nicknameJogador: state.player.nickname });
+    }
 };
-
 export {
     GameContext,
     GameProvider,

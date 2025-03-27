@@ -4,7 +4,7 @@ exports.createRoom = async (req, res) => {
   try {
     const { idJogador1 } = req.body;
     const newRoom = await db.Sala.create({
-      idJogadorCriouPartida: idJogador1,
+      idJogadorCriouSala: idJogador1, // Corrigido de "idJogadorCriouPartida"
       dataCriacao: new Date(),
       qtdPartidas: 0,
     });
