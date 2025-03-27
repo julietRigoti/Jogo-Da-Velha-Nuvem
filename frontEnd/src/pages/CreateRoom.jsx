@@ -7,6 +7,7 @@ const CreateRoom = () => {
     
     const location = useLocation(); // Acessar location aqui, dentro do componente
     const navigate = useNavigate();
+    const [socket, setSocket] = useState(null);
 
     // Extraindo dados da location de maneira segura
     const [idJogador, setIdJogador] = useState(null);
@@ -14,23 +15,38 @@ const CreateRoom = () => {
     const [jwtToken, setJwtToken] = useState(null);
 
     useEffect(() => {
-        // Verificar se location.state está disponível
-        if (location.state) {
-            const { idJogador, nicknameJogador, jwtToken } = location.state;
-            setIdJogador(idJogador || null);
-            setNicknameJogador(nicknameJogador || null);
-            setJwtToken(jwtToken || null);
+        const idJogador = location.state?.idJogador || sessionStorage.getItem("idJogador");
+        const nicknameJogador = location.state?.nicknameJogador || sessionStorage.getItem("nicknameJogador");
+        const jwtToken = location.state?.jwtToken || sessionStorage.getItem("token");
+    
+        if (!idJogador || !nicknameJogador || !jwtToken) {
+            console.error("Erro: Dados do jogador não encontrados. Redirecionando para o login...");
+            navigate("/login"); // Redireciona para o login se os dados estiverem ausentes
+        } else {
+            setIdJogador(idJogador);
+            setNicknameJogador(nicknameJogador);
+            setJwtToken(jwtToken);
         }
-    }, [location.state]);
+    }, [location.state, navigate]);
 
     console.log("Token JWT: ", jwtToken); // Aqui você pode usar o token
+    console.log("ID Jogador: ", idJogador); // Aqui você pode usar o idJogador
+    console.log("Nickname Jogador: ", nicknameJogador); // Aqui você pode usar o nicknameJogador
 
     // Conexão com o servidor WebSocket
-    const socket = io("http://localhost:8080", {
-        auth: {
-            token: jwtToken || localStorage.getItem('jwtToken'), // Usando jwtToken vindo da state ou localStorage
+    useEffect(() => {
+        if (jwtToken) {
+            const newSocket = io("http://localhost:8080", {
+                auth: { token: jwtToken }
+            });
+    
+            setSocket(newSocket);
+    
+            return () => {
+                newSocket.disconnect(); // Garante que a conexão seja fechada ao desmontar o componente
+            };
         }
-    });
+    }, [jwtToken]);
 
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -38,29 +54,33 @@ const CreateRoom = () => {
 
     // Função para criar uma nova sala
     const handleCreateRoom = () => {
-        setError("");
-        setIsLoading(true);
-
-        if (!idJogador || !nicknameJogador) {
-            setError("Erro: Dados do jogador não encontrados.");
-            setIsLoading(false);
+        if (!socket) {
+            setError("Erro: Conexão com o servidor ainda não estabelecida.");
             return;
         }
+    
+        if (!idJogador || !nicknameJogador) {
+            setError("Erro: Dados do jogador não encontrados.");
+            return;
+        }
+    
+        setIsLoading(true);
+        setError("");
 
-        // Emitir evento para criar a sala no back-end
-        socket.emit("criarSala", { idJogador, nicknameJogador }, (response) => {
-            if (response.sucesso) {
-                setIsLoading(false);
-                navigate(`/jogoVelha/${response.idSala}`); // Redireciona para a sala criada
-            } else {
-                setIsLoading(false);
-                setError(response.mensagem || "Erro ao criar a sala.");
-            }
-        });
+     socket.emit("criarSala", { jogador: { idJogador, nicknameJogador } }, (response) => {
+        console.log("Resposta do servidor ao criar sala:", response);
+        if (response.sucesso) {
+            navigate(`/jogoVelha/${response.idSala}`); // Redireciona para a sala criada
+        } else {
+            setError(response.mensagem || "Erro ao criar a sala.");
+        }
+    });
     };
 
     // Efeito para ouvir a resposta do servidor e atualizar as salas
     useEffect(() => {
+        if (!socket) return;
+
         const handleRoomCreated = (data) => {
             if (data.sucesso) {
                 setIsLoading(false); // Desativa o estado de carregamento
@@ -72,28 +92,35 @@ const CreateRoom = () => {
         };
 
         const handleSalasAtualizadas = (salasAtivas) => {
-            // Filtra as salas que tem apenas um jogador
-            const salasComUmJogador = salasAtivas.filter((sala) => sala.jogadores.length === 1);
-            setSalas(salasComUmJogador);
+            console.log("Salas atualizadas recebidas:", salasAtivas);
+            if (!Array.isArray(salasAtivas)) return;
+    
+            // Atualiza o estado com as salas disponíveis
+            setSalas(salasAtivas);
         };
 
         socket.on("roomCreated", handleRoomCreated);
-        socket.on("updateRooms", handleSalasAtualizadas);
+      
 
         // Solicita a lista de salas ao servidor
         socket.emit("getRooms");
+        console.log("Solicitando salas disponíveis...");
+        socket.on("updateRooms", handleSalasAtualizadas);
+
 
         return () => {
-            socket.off("roomCreated", handleRoomCreated);
             socket.off("updateRooms", handleSalasAtualizadas);
-        };
-    }, [navigate]);
+            socket.off("roomCreated", handleRoomCreated);
+            socket.off("availableRooms");
+        }
+        
+    }, [socket]);
 
     // Função para entrar na sala
     const handleJoinRoom = (salaId) => {
         socket.emit("entrarSala", { idSala: salaId, idJogador, nicknameJogador }, (response) => {
             if (response.sucesso) {
-                navigate(`/jogoVelha/${salaId}`); // Redireciona para a sala
+                navigate(`/jogoVelha/${idSala}`); // Redireciona para a sala
             } else {
                 setError(response.mensagem || "Erro ao entrar na sala.");
             }
@@ -115,9 +142,9 @@ const CreateRoom = () => {
             {salas.length > 0 ? (
                 <ul className={styles.roomList}>
                     {salas.map((sala) => (
-                        <li key={sala.id}>
-                            <span>{sala.nome}</span>
-                            <button onClick={() => handleJoinRoom(sala.id)} disabled={isLoading}>
+                        <li key={sala.idSala}>
+                            <span>Sala ID: {sala.idSala}</span>
+                            <button onClick={() => handleJoinRoom(sala.idSala)} disabled={isLoading}>
                                 Entrar
                             </button>
                         </li>
