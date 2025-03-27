@@ -1,105 +1,94 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import io from 'socket.io-client';
-
-// Conectar ao servidor WebSocket
-const socket = io('jogo-da-velha-nuvem-production.up.railway.app');  // Certifique-se de que a URL do servidor está correta
+import styles from '../style/JogoVelha.module.css';
 
 const JogoDaVelha = () => {
+  const [socket, setSocket] = useState(null);
   const [symbol, setSymbol] = useState('');
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState('X');
   const [scores, setScores] = useState({ X: 0, O: 0 });
   const [winner, setWinner] = useState('');
- 
-  // Conectar ao servidor e configurar eventos
+  const { idSala } = useParams();
+
+  // Inicializa o WebSocket
   useEffect(() => {
-    // Se conecta ao servidor
-    socket.on('connect', () => {
-      console.log('Conectado ao servidor WebSocket!');
-      socket.emit('createRoom'); // Criar sala
+    const newSocket = io("http://localhost:8080", {
+      auth: { token: localStorage.getItem("jwtToken") }
     });
 
-    socket.on('roomCreated', (roomId) => {
-      console.log(`Sala criada com ID: ${roomId}`);
-    });
+    setSocket(newSocket);
 
-    socket.on('assignSymbol', (playerSymbol) => {
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  // Gerencia eventos WebSocket
+  useEffect(() => {
+    if (!socket || !idSala) return;
+
+    console.log(`Entrando na sala: ${idSala}`);
+    socket.emit("joinRoom", idSala);
+
+    socket.on("assignSymbol", (playerSymbol) => {
       setSymbol(playerSymbol);
       console.log(`Seu símbolo é: ${playerSymbol}`);
     });
 
-    socket.on('updateBoard', (newBoard) => {
-      setBoard(newBoard);
+    socket.on("updateBoard", (newBoard) => setBoard(newBoard));
+    socket.on("updateScores", (updatedScores) => setScores(updatedScores));
+    socket.on("updateCurrentPlayer", (player) => setCurrentPlayer(player));
+
+    socket.on("gameOver", (winner) => {
+      setWinner(winner === "Empate" ? "Empate!" : `Jogador ${winner} venceu!`);
     });
 
-    socket.on('updateScores', (updatedScores) => {
-      setScores(updatedScores);
-    });
-
-    socket.on('updateCurrentPlayer', (player) => {
-      setCurrentPlayer(player);
-    });
-
-    socket.on('gameOver', (winner) => {
-      if (winner === 'Empate') {
-        setWinner('Empate!');
-      } else {
-        setWinner(`Jogador ${winner} venceu!`);
-      }
-    });
-
-    socket.on('restartGame', () => {
+    socket.on("restartGame", () => {
       setBoard(Array(9).fill(null));
-      setWinner('');
+      setWinner("");
     });
 
-    // Cleanup na desconexão
     return () => {
-      socket.off('connect');
-      socket.off('roomCreated');
-      socket.off('assignSymbol');
-      socket.off('updateBoard');
-      socket.off('updateScores');
-      socket.off('updateCurrentPlayer');
-      socket.off('gameOver');
-      socket.off('restartGame');
+      socket.off("assignSymbol");
+      socket.off("updateBoard");
+      socket.off("updateScores");
+      socket.off("updateCurrentPlayer");
+      socket.off("gameOver");
+      socket.off("restartGame");
     };
-  }, []);
+  }, [socket, idSala]);
 
-  // Função para fazer jogada
   const makeMove = (index) => {
+    if (!socket) {
+      console.error("Socket não está conectado.");
+      return;
+    }
+
     if (board[index] === null && currentPlayer === symbol) {
-      socket.emit('makeMove', { index, symbol });
+      socket.emit("makeMove", { index, symbol, idSala });
     }
   };
 
-  // Renderizar o tabuleiro
-  const renderBoard = () => {
-    return (
-      <div id="board">
+  return (
+    <div className={styles.container}>
+      <h1>Jogo da Velha Online</h1>
+      <div className={styles.board}>
         {board.map((value, index) => (
           <button
             key={index}
             onClick={() => makeMove(index)}
-            style={{ width: '60px', height: '60px', fontSize: '24px' }}
+            className={styles.cell}
           >
             {value}
           </button>
         ))}
       </div>
-    );
-  };
-
-  return (
-    <div>
-      <h1>Jogo da Velha Online</h1>
-      <div id="game">
-        {renderBoard()}
-        <div id="status">
-          <p>Jogador Atual: <span>{currentPlayer}</span></p>
-          <p>Pontuação - X: <span>{scores.X}</span> | O: <span>{scores.O}</span></p>
-          <p>Vencedor: <span>{winner}</span></p>
-        </div>
+      <div className={styles.status}>
+        <p>Jogador Atual: <span>{currentPlayer}</span></p>
+        <p>Pontuação - X: <span>{scores.X}</span> | O: <span>{scores.O}</span></p>
+        <p>Vencedor: <span>{winner}</span></p>
       </div>
     </div>
   );

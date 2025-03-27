@@ -2,60 +2,60 @@ const { Sala, Jogador, Historico } = require("../models");
 const jwt = require("jsonwebtoken");
 const Redis = require("ioredis");
 
-// Conexão com o Redis - Redis é um banco de dados em memória que armazena dados-chave e valores em cache para melhorar o desempenho do aplicativo em tempo real
 const redis = new Redis();
+const game = { players: {} }; // Armazena jogadores conectados
+
+// ===============================
+// 🔒 Middleware de autenticação JWT
+// ===============================
+const autenticarJWT = (socket, next) => {
+  console.debug("🔍 Autenticando jogador...");
+
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error("Token não fornecido"));
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return next(new Error("Token inválido"));
+    socket.user = decoded;
+    next();
+  });
+};
 
 module.exports = (io) => {
-  io.on("connection", (socket) => {
-    console.log(`🎮 Novo jogador conectado: ${socket.id}`);
+  io.use(autenticarJWT); // Aplica autenticação para todas as conexões
 
-    // Middleware para autenticação JWT
-    socket.use((packet, next) => {
-        console.debug("🔍 Middleware de autenticação JWT iniciado.");
-        console.debug("🔍 socket.handshake.auth:", socket.handshake.auth); // ✅ Verificar todo o objeto de autenticação
-        
-        const token = socket.handshake.auth.token;
-        console.debug("🔍 Token recebido:", token);
-        
-        if (!token) {
-          console.debug("⚠️ Token não fornecido.");
-          return next(new Error("Token não fornecido"));
-        }
-      
-        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-          if (err) {
-            console.debug("⚠️ Erro ao verificar token:", err.message);
-            return next(new Error("Token inválido"));
-          }
-          console.debug("✅ Token verificado com sucesso:", decoded);
-          socket.user = decoded; // Armazena o usuário autenticado
-          next();
-        });
-      });
+  io.on("connection", async (socket) => {
+    console.log(`🎮 Jogador conectado: ${socket.id}`);
 
-    // Criar uma nova sala e salvar no Redis e no Banco de Dados
-    socket.on("criarSala", async ({ nicknameJogador }, callback) => {
+    const jogador = {
+      idJogador: socket.user.idJogador,
+      nickname: socket.user.nickname,
+    };
+
+    game.players[socket.id] = jogador;
+    await redis.set(`player:${socket.user.idJogador}`, JSON.stringify(jogador));
+    refreshPlayers(io);
+
+    // ===============================
+    // 🏠 Criar uma nova sala
+    // ===============================
+    socket.on("criarSala", async (data, callback) => {
       try {
-        console.debug("🔍 Evento criarSala recebido:", { nicknameJogador });
+        const jogador = data.jogador; // Dados do jogador enviados pelo cliente
+        const idSala = Math.floor(Date.now() / 1000); // Gera um ID único para a sala
 
-        const jogador = {
-          idJogador: socket.user.idJogador,
-          nickname: nicknameJogador,
+        const novaSala = {
+          idSala,
+          jogador1: jogador,
+          jogador2: null,
+          tabuleiro: Array(9).fill(null),
+          emAndamento: true,
         };
-        const idSala = Math.floor(Date.now() / 1000); // Timestamp em segundos
 
-        console.debug("🔍 Dados do jogador:", jogador);
-        console.debug("🔍 ID da sala gerado:", idSala);
+        // Salva a sala no Redis
+        await redis.set(`sala:${idSala}`, JSON.stringify(novaSala));
 
-        if (!jogador) {
-          console.debug("⚠️ Jogador não encontrado.");
-          return callback({
-            sucesso: false,
-            mensagem: "Jogador não encontrado.",
-          });
-        }
-
-        // Salvar a sala no banco de dados
+        // Salva a sala no banco de dados
         await Sala.create({
           idSala,
           idJogadorCriouSala: jogador.idJogador,
@@ -63,208 +63,237 @@ module.exports = (io) => {
           dataCriacao: new Date(),
         });
 
-        console.debug("✅ Sala salva no banco de dados:", { idSala });
-
-        // Armazenar no Redis
-        const novaSala = {
-          jogador1: {
-            id: jogador.idJogador,
-            nickname: nicknameJogador,
-            simbolo: "X",
-          },
-          jogador2: null,
-          tabuleiro: Array(9).fill(null),
-          emAndamento: true,
-        };
-
-        await redis.set(`sala:${idSala}`, JSON.stringify(novaSala));
-
-        console.debug("✅ Sala armazenada no Redis:", novaSala);
-
+        // Adiciona o jogador à sala
         socket.join(idSala);
         console.log(`🟢 Sala criada: ${idSala}`);
-        callback({ sucesso: true, idSala, idJogador: jogador.idJogador });
+
+        // Atualiza a lista de salas para todos os clientes
+        refreshRooms(io);
+
+        // Retorna sucesso para o cliente
+        if (typeof callback === "function") {
+          callback({ sucesso: true, idSala });
+        }
       } catch (error) {
         console.error("Erro ao criar sala:", error);
-        callback({ sucesso: false, mensagem: "Erro interno ao criar sala." });
+
+        // Retorna erro para o cliente
+        if (typeof callback === "function") {
+          callback({ sucesso: false, mensagem: "Erro interno ao criar sala." });
+        }
       }
     });
 
-    // Entrar em uma sala
-    socket.on("entrarSala", async ({ idSala, nicknameJogador }, callback) => {
+    // ===============================
+    // 🔄 Entrar em uma sala
+    // ===============================
+    socket.on("entrarSala", async ({ idSala }, callback) => {
       try {
-        console.debug("🔍 Evento entrarSala recebido:", {
-          idSala,
-          nicknameJogador,
-        });
-
-        const salaJSON = await redis.get(`sala:${idSala}`);
-        if (!salaJSON) {
-          console.debug("⚠️ Sala não encontrada:", { idSala });
+        const salaJSON = await redis.get(idSala);
+        if (!salaJSON)
           return callback({ sucesso: false, mensagem: "Sala não encontrada." });
-        }
 
         const sala = JSON.parse(salaJSON);
-        console.debug("🔍 Sala encontrada:", sala);
+        if (sala.jogador2)
+          return callback({ sucesso: false, mensagem: "Sala cheia." });
 
-        const jogador = {
-          idJogador: socket.user.idJogador,
-          nickname: nicknameJogador,
-        };
-        console.debug("🔍 Dados do jogador:", jogador);
-
-        if (
-          sala.jogador1.id === jogador.idJogador ||
-          (sala.jogador2 && sala.jogador2.id === jogador.idJogador)
-        ) {
-          console.debug("⚠️ Jogador já está na sala:", { jogador });
-          return callback({
-            sucesso: false,
-            mensagem: "Você já está na sala.",
-          });
-        }
-
-        if (sala.jogador2) {
-          console.debug("⚠️ Sala já está cheia:", { idSala });
-          return callback({ sucesso: false, mensagem: "Sala já está cheia." });
-        }
-
-        sala.jogador2 = {
-          id: jogador.idJogador,
-          nickname: nicknameJogador,
-          simbolo: "O",
-        };
-        console.debug("✅ Jogador adicionado à sala:", sala.jogador2);
-
-        await redis.set(`sala:${idSala}`, JSON.stringify(sala));
-        console.debug("✅ Sala atualizada no Redis:", sala);
+        sala.jogador2 = jogador;
+        await redis.set(`sala:${idSala}`, JSON.stringify(novaSala));
 
         socket.join(idSala);
-        console.debug(`🟢 Jogador entrou na sala: ${idSala}`);
-
+        console.log(`🟢 Jogador entrou na sala: ${idSala}`);
         io.to(idSala).emit("atualizarSala", sala);
         callback({ sucesso: true, idSala });
+
+        refreshRooms(io);
       } catch (error) {
         console.error("Erro ao entrar na sala:", error);
-        callback({
-          sucesso: false,
-          mensagem: "Erro interno ao entrar na sala.",
-        });
+        callback({ sucesso: false, mensagem: "Erro ao entrar na sala." });
       }
     });
 
-    // Fazer uma jogada
-    socket.on("fazerJogada", async ({ idSala, index, nicknameJogador }) => {
+    // ===============================
+    // 🎲 Fazer uma jogada
+    // ===============================
+    socket.on("fazerJogada", async ({ idSala, index }, callback) => {
       try {
-        console.debug("🔍 Evento fazerJogada recebido:", { idSala, index, nicknameJogador });
-
-        const salaJSON = await redis.get(`sala:${idSala}`);
-        if (!salaJSON) {
-          console.debug("⚠️ Sala não encontrada no Redis:", { idSala });
-          return;
-        }
+        const salaJSON = await redis.get(idSala);
+        if (!salaJSON)
+          return callback({ sucesso: false, mensagem: "Sala não encontrada." });
 
         const sala = JSON.parse(salaJSON);
-        console.debug("🔍 Sala carregada do Redis:", sala);
-
-        if (!sala || !sala.emAndamento) {
-          console.debug("⚠️ Sala inválida ou jogo já encerrado:", { sala });
-          return;
+        if (!sala.emAndamento || sala.tabuleiro[index] !== null) {
+          return callback({ sucesso: false, mensagem: "Jogada inválida." });
         }
-
-        const jogadorAtual =
-          nicknameJogador === sala.jogador1.nickname
-            ? sala.jogador1
-            : sala.jogador2;
-        console.debug("🔍 Jogador atual identificado:", jogadorAtual);
 
         const simboloAtual =
           sala.tabuleiro.filter((c) => c !== null).length % 2 === 0 ? "X" : "O";
-        console.debug("🔍 Símbolo esperado para a jogada:", simboloAtual);
+        const jogadorAtual =
+          sala.jogador1.idJogador === jogador.idJogador
+            ? sala.jogador1
+            : sala.jogador2;
 
-        if (
-          sala.tabuleiro[index] !== null ||
-          jogadorAtual.simbolo !== simboloAtual
-        ) {
-          console.debug(
-            "⚠️ Jogada inválida. Verifique se a posição está ocupada ou se é a vez do jogador:",
-            { index, simboloAtual, tabuleiro: sala.tabuleiro }
-          );
-          return;
+        if (jogadorAtual.simbolo !== simboloAtual) {
+          return callback({ sucesso: false, mensagem: "Não é sua vez." });
         }
 
-        sala.tabuleiro[index] = jogadorAtual.simbolo;
-        console.debug("✅ Jogada registrada no tabuleiro:", sala.tabuleiro);
-
-        await redis.set(`sala:${idSala}`, JSON.stringify(sala));
-        console.debug("✅ Sala atualizada no Redis após a jogada:", sala);
-
+        sala.tabuleiro[index] = simboloAtual;
+        await redis.set(`sala:${idSala}`, JSON.stringify(novaSala));
         io.to(idSala).emit("atualizarTabuleiro", sala.tabuleiro);
-        console.debug("📤 Tabuleiro atualizado enviado para a sala:", idSala);
 
-        // Verificar o vencedor ou empate
         const vencedor = verificarVencedor(sala.tabuleiro);
         if (vencedor || sala.tabuleiro.every((c) => c !== null)) {
           sala.emAndamento = false;
-          console.debug(
-            vencedor
-              ? `🏆 Vencedor identificado: ${vencedor}`
-              : "🤝 Jogo terminou em empate."
-          );
+          await redis.del(idSala);
 
           await Historico.create({
             idSala,
-            idJogador1: sala.jogador1.id,
-            idJogador2: sala.jogador2.id,
-            pontuacaoJogador1: vencedor === sala.jogador1.simbolo ? 1 : 0,
-            pontuacaoJogador2: vencedor === sala.jogador2.simbolo ? 1 : 0,
+            idJogador1: sala.jogador1.idJogador,
+            idJogador2: sala.jogador2.idJogador,
+            pontuacaoJogador1: vencedor === "X" ? 1 : 0,
+            pontuacaoJogador2: vencedor === "O" ? 1 : 0,
           });
-          console.debug("✅ Histórico do jogo salvo no banco de dados.");
 
-          await redis.del(`sala:${idSala}`); // Limpar a sala após o término
-          console.debug("🗑️ Sala removida do Redis após o término do jogo.");
-
-          io.to(idSala).emit("fimDeJogo", {
-            vencedor: vencedor ? jogadorAtual.nickname : null,
-          });
-          console.debug("📤 Evento fimDeJogo enviado para a sala:", idSala);
+          io.to(idSala).emit("fimDeJogo", { vencedor });
         }
+
+        callback({ sucesso: true });
       } catch (error) {
-        console.error("Erro ao processar jogada:", error);
+        console.error("Erro ao fazer jogada:", error);
+        callback({ sucesso: false, mensagem: "Erro ao processar jogada." });
       }
     });
 
-    // Jogador desconectado
+    // ===============================
+    // ❌ Sair da sala
+    // ===============================
+    socket.on("sairSala", async ({ idSala }, callback) => {
+      try {
+        const salaJSON = await redis.get(idSala);
+        if (!salaJSON)
+          return callback({ sucesso: false, mensagem: "Sala não encontrada." });
+
+        const sala = JSON.parse(salaJSON);
+        if (sala.jogador1.idJogador === jogador.idJogador) sala.jogador1 = null;
+        else if (sala.jogador2?.idJogador === jogador.idJogador)
+          sala.jogador2 = null;
+
+        await redis.set(`sala:${idSala}`, JSON.stringify(novaSala));
+        socket.leave(idSala);
+        console.log(`🔴 Jogador saiu da sala: ${idSala}`);
+        refreshRooms(io);
+        callback({ sucesso: true });
+      } catch (error) {
+        console.error("Erro ao sair da sala:", error);
+        callback({ sucesso: false, mensagem: "Erro ao sair da sala." });
+      }
+    });
+
+    socket.on("getRooms", async (callback) => {
+      try {
+          console.log("🔄 Buscando salas disponíveis...");
+          const salasKeys = await redis.keys("sala:*");
+          const salas = [];
+  
+          if (salasKeys.length === 0) {
+              console.warn("⚠ Nenhuma sala encontrada no Redis.");
+              callback([]);
+              return;
+          }
+  
+          for (const key of salasKeys) {
+              const type = await redis.type(key);
+              console.log(`Tipo da chave ${key}: ${type}`);
+  
+              if (type === "string") {
+                  const sala = JSON.parse(await redis.get(key));
+                  salas.push(sala);
+              } else {
+                  console.warn(`Chave ignorada (${key}): Tipo inesperado (${type})`);
+              }
+          }
+  
+          const salasDisponiveis = salas.filter((sala) => sala && sala.jogador2 === null);
+          console.log("Salas disponíveis:", salasDisponiveis); // ✅ Correção feita aqui
+  
+          if (typeof callback === "function") {
+              callback(salasDisponiveis);
+          }
+      } catch (error) {
+          console.error("Erro ao buscar salas:", error);
+          if (typeof callback === "function") {
+              callback([]);
+          }
+      }
+  });
+
+    // ===============================
+    // 🔌 Desconectar jogador
+    // ===============================
     socket.on("disconnect", async () => {
       console.log(`🔴 Jogador desconectado: ${socket.id}`);
 
-      const salasAtivas = await redis.keys("sala:*");
-      for (const salaKey of salasAtivas) {
-        const sala = JSON.parse(await redis.get(salaKey));
-        if (sala.jogador1?.id === socket.user.idJogador) {
-          sala.jogador1.desconectado = true;
-        } else if (sala.jogador2?.id === socket.user.idJogador) {
-          sala.jogador2.desconectado = true;
-        }
-        await redis.set(salaKey, JSON.stringify(sala));
-      }
+      await redis.del(`player:${jogador.idJogador}`);
+      delete game.players[socket.id];
+
+      refreshPlayers(io);
     });
   });
 
-  // Função auxiliar para verificar o vencedor
+  // ===============================
+  // 🔄 Atualizar lista de jogadores
+  // ===============================
+  async function refreshPlayers(io) {
+    const playersKeys = await redis.keys("player:*");
+    const players = await Promise.all(
+      playersKeys.map(async (key) => JSON.parse(await redis.get(key)))
+    );
+    io.emit("PlayersRefresh", players);
+  }
+
+  // ===============================
+  // 🔄 Atualizar lista de salas
+  // ===============================
+  async function refreshRooms(io) {
+    try {
+        const salasKeys = await redis.keys("sala:*"); // Busca apenas as chaves com prefixo "sala:"
+        const salas = [];
+
+        for (const key of salasKeys) {
+            const type = await redis.type(key);
+            if (type === "string") {
+                const sala = JSON.parse(await redis.get(key));
+                salas.push(sala);
+            } else {
+                console.warn(`Chave ignorada (${key}): Tipo inesperado (${type})`);
+            }
+        }
+
+        // Filtra apenas as salas disponíveis (jogador2 é null)
+        const salasDisponiveis = salas.filter((sala) => sala && sala.jogador2 === null);
+
+        // Emite a lista de salas disponíveis para todos os clientes conectados
+        io.emit("updateRooms", salasDisponiveis);
+    } catch (error) {
+        console.error("Erro ao atualizar salas:", error);
+    }
+}
+
+  // ===============================
+  // 🏆 Verificar vencedor
+  // ===============================
   function verificarVencedor(tabuleiro) {
-    const combinacoesVencedoras = [
+    const linhas = [
       [0, 1, 2],
       [3, 4, 5],
-      [6, 7, 8], // Linhas
+      [6, 7, 8],
       [0, 3, 6],
       [1, 4, 7],
-      [2, 5, 8], // Colunas
+      [2, 5, 8],
       [0, 4, 8],
-      [2, 4, 6], // Diagonais
+      [2, 4, 6],
     ];
-
-    for (const [a, b, c] of combinacoesVencedoras) {
+    for (const [a, b, c] of linhas) {
       if (
         tabuleiro[a] &&
         tabuleiro[a] === tabuleiro[b] &&

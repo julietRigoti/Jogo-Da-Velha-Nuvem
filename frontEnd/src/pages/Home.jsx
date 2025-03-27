@@ -9,12 +9,8 @@ import imagemO from "../imagens/O.gif";
 const Home = () => {
   const navigate = useNavigate();
 
-  const chooseLoginOrSignup = (world) => {
-    if (world === "login") {
-      navigate("/login");
-    } else {
-      navigate("/signup");
-    }
+  const chooseLoginOrSignup = (tipo) => {
+    navigate(tipo === "login" ? "/login" : "/signup");
   };
 
   return (

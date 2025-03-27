@@ -1,132 +1,123 @@
-import React, { createContext, useReducer, useEffect } from 'react';
-import { io } from 'socket.io-client';
+import React, { useReducer, useEffect, createContext } from 'react';
+import socketClient from 'socket.io-client';
 
-// URL do servidor onde o socket está rodando
-const socket = io("http://localhost:8080");
-
-// Estado inicial
-const initialState = {
-  roomId: null,
-  board: Array(9).fill(null),
-  currentPlayer: 'X',
-  scores: { X: 0, O: 0 },
-  players: [],
-};
-
-// Função reducer para gerenciar as ações do estado
-const gameReducer = (state, action) => {
-  switch (action.type) {
-    case "SET_ROOM_ID":
-      return { ...state, roomId: action.payload };
-    case "SET_BOARD":
-      return { ...state, board: action.payload };
-    case "SET_CURRENT_PLAYER":
-      return { ...state, currentPlayer: action.payload };
-    case "SET_SCORES":
-      return { ...state, scores: action.payload };
-    case "SET_PLAYERS":
-      return { ...state, players: action.payload };
-    default:
-      return state;
-  }
-};
-
-export const GameContext = createContext(); // Exporta o GameContext
-
-export const GameProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
-
-  useEffect(() => {
-
-    socket.on("connect", () => {
-      console.log("Conectado ao servidor!", socket.id);
-    });
-
-
-    // Recebe a notificação quando uma sala for criada
-    socket.on("roomCreated", (id) => {
-      dispatch({ type: "SET_ROOM_ID", payload: id });
-      console.log(`Sala criada: ${id}`);
-    });
-
-    // Atribui o símbolo ao jogador
-    socket.on("assignSymbol", (symbol) => {
-      dispatch({ type: "SET_CURRENT_PLAYER", payload: symbol });
-    });
-
-    // Atualiza o tabuleiro quando o jogo for atualizado
-    socket.on("updateBoard", (newBoard) => {
-      dispatch({ type: "SET_BOARD", payload: newBoard });
-    });
-
-    // Atualiza o placar do jogo
-    socket.on("updateScores", (newScores) => {
-      dispatch({ type: "SET_SCORES", payload: newScores });
-    });
-
-    // Notifica quando o jogo termina (vitória ou empate)
-    socket.on("gameOver", (result) => {
-      alert(result === "Empate" ? "Empate!" : `Jogador ${result} venceu!`);
-      resetBoard();
-    });
-
-    // Atualiza os jogadores na sala
-    socket.on("playersUpdate", (playersInRoom) => {
-      dispatch({ type: "SET_PLAYERS", payload: playersInRoom });
-    });
-
-    socket.on("login", (player) => {
-        dispatch({ type: "SET_PLAYER", payload: player});
-      });
-
-    // Limpa os eventos quando o componente for desmontado
-    return () => {
-      socket.off();
-    };
-  }, []);
-
-  // Função para criar uma nova sala
-  const createRoom = () => {
-    socket.emit("createRoom");
-  };
-
-  // Função para fazer uma jogada
-  const makeMove = (index) => {
-    if (state.board[index] === null && state.currentPlayer) {
-      socket.emit("makeMove", { index, symbol: state.currentPlayer });
+const socket = socketClient('http://localhost:8080', {
+    autoConnect: false,
+    auth: {
+        token: localStorage.getItem("jwtToken")
     }
-  };
+});
 
-   // Função para entrar em uma sala existente
-   const joinRoom = (roomId, playerId) => {
-    socket.emit("join-room", roomId, playerId);
-    dispatch({ type: "SET_ROOM_ID", payload: roomId });
-  };
+const GameContext = React.createContext();
 
-  // Função para reiniciar o jogo
-  const restartGame = () => {
-    socket.emit("restartGame");
-    resetBoard();
-  };
-
-  // Função para resetar o tabuleiro
-  const resetBoard = () => {
-    dispatch({ type: "SET_BOARD", payload: Array(9).fill(null) });
-    dispatch({ type: "SET_CURRENT_PLAYER", payload: "X" });
-  };
-
-  return (
-    <GameContext.Provider value={{
-      ...state,
-      dispatch,
-      createRoom,
-      makeMove,
-      restartGame, 
-      joinRoom, 
-    }}>
-      {children}
-    </GameContext.Provider>
-  );
+const reducer = (state, action) => {
+    switch (action.type) {
+        case 'CONNECTED':
+            return {
+                ...state,
+                isConnected: action.payload
+            };
+        case 'PLAYER':
+            return {
+                ...state,
+                player: action.payload
+            };
+        case 'SET_PLAYER': // Novo tipo de ação para salvar id e nickname
+            return {
+                ...state,
+                player: {
+                    id: action.payload.id,
+                    nickname: action.payload.nickname,
+                    jwtToken: action.payload.jwtToken
+                }
+            };
+        case 'PLAYERS':
+            return {
+                ...state,
+                players: action.payload
+            };
+        case 'ROOM':
+            const player = state.players[action.payload];
+            return {
+                ...state,
+                room: player ? player.room : null
+            };
+        case 'ROOMS':
+            return {
+                ...state,
+                rooms: action.payload
+            };
+        default:
+            return state;
+    }
 };
 
-export const useGame = () => useContext(GameContext);
+const initialState = {
+    isConnected: false,
+    player: {
+        id: null,
+        nickname: null,
+        jwtToken: localStorage.getItem("jwtToken") || null
+    },
+    room: {},
+    rooms: {},
+    players: {},
+    messages: []
+};
+
+const GameProvider = (props) => {
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    useEffect(() => {
+        socket.on('connect', () => {
+            dispatch({ type: 'CONNECTED', payload: true });
+        });
+        socket.on('disconnect', () => {
+            dispatch({ type: 'CONNECTED', payload: false });
+        });
+        socket.on('PlayersRefresh', (players) => {
+            if (socket.id && players[socket.id]) {
+                dispatch({ type: 'PLAYER', payload: players[socket.id] });
+            }
+        });
+        socket.on('RoomsRefresh', (rooms) => {
+            dispatch({ type: 'ROOMS', payload: rooms });
+            dispatch({ type: 'ROOM', payload: socket.id });
+        });
+
+        const token = localStorage.getItem("jwtToken");
+        if (token) {
+            socket.auth.token = token;
+            socket.open();
+        }
+    }, []);
+
+    return (
+        <GameContext.Provider value={{ state, dispatch }}>
+            {props.children}
+        </GameContext.Provider>
+    );
+};
+
+const createRoom = () => {
+    if (state.player.nickname) {
+        socket.emit('criarSala', { nicknameJogador: state.player.nickname });
+    }
+};
+
+const leaveRoom = () => {
+    socket.emit('LeaveRoom');
+};
+
+const joinRoom = (roomId) => {
+    if (state.player.nickname) {
+        socket.emit('JoinRoom', { idSala: roomId, nicknameJogador: state.player.nickname });
+    }
+};
+export {
+    GameContext,
+    GameProvider,
+    createRoom,
+    leaveRoom,
+    joinRoom
+};

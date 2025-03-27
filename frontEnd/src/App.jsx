@@ -5,7 +5,8 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import CreateRooms from './pages/CreateRoom';
 import Home from './pages/Home';
-import JoinRoom from './pages/JoinRoom';
+import JogoVelha from './pages/JogoVelha';
+
 
 function App() {
   return (
@@ -14,9 +15,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/create-room" element={<CreateRooms />} />       
-          <Route path="/join-room/:idSala" element={<JoinRoom />} />
-          <Route path="*" element={<Home />} />
+          <Route path="/create-room" element={<CreateRooms />} />
+          <Route path="/jogoVelha/:idSala" element={<JogoVelha />} />       
+          <Route path="/" element={<Home />} />
           
         </Routes>
       </Router>

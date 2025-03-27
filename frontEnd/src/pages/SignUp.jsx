@@ -25,20 +25,31 @@ const SignUp = () => {
   // Função para enviar os dados ao backend
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Limpar mensagens de erro anteriores
+    setError("");
 
-    // Verificar se as senhas coincidem
+    // Validações organizadas
+    if (formData.nicknameJogador.trim().length < 3) {
+      return setError("O nickname deve ter pelo menos 3 caracteres!");
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.emailJogador)) {
+      return setError("O e-mail deve ser válido!");
+    }
+    if (formData.passwordJogador.length < 6) {
+      return setError("A senha deve ter pelo menos 6 caracteres!");
+    }
     if (formData.passwordJogador !== formData.confirmPassword) {
-      setError("As senhas não coincidem!");
-      return;
+      return setError("As senhas não coincidem!");
     }
 
+    console.log("Dados do jogador:", formData); // Aqui você pode ver os dados antes de enviar
+
     try {
-      // Requisição para o backend
       const response = await fetch("http://localhost:8080/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          idJogador: null, // O idJogador será gerado automaticamente pelo banco de dados
+          pontuacaoJogadorXP: 0, // Valor padrão
           nicknameJogador: formData.nicknameJogador,
           emailJogador: formData.emailJogador,
           passwordJogador: formData.passwordJogador,
@@ -47,17 +58,41 @@ const SignUp = () => {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Erro no servidor");
+      console.log("Resposta do servidor:", data); // Aqui você pode ver a resposta do servidor
+      if (!response.ok) throw new Error(data.message || "Erro no servidor");
+
+      const { jogador, token } = data; // Extrair os dados do jogador e o token
+      if (!jogador || !token) {
+        throw new Error("Dados incompletos recebidos do servidor.");
       }
 
-      // Armazena o token JWT no localStorage para autenticação
-      localStorage.setItem("token", data.token);
 
-      console.log("Usuário cadastrado com sucesso:", data);
-      
-      // Redireciona para a página de criação de sala
-      navigate("/create-room");
+      console.log("Token JWT:", token);
+      console.log("ID do jogador:", jogador.idJogador);
+      console.log("Nickname do jogador:", jogador.nicknameJogador);
+
+      // Salva o token e informações do usuário
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("idJogador", jogador.idJogador);
+      sessionStorage.setItem("nicknameJogador", jogador.nicknameJogador);
+
+      console.log("Verificar se o idJogador e nicknameJogador estão salvos corretamente no sessionStorage:", sessionStorage.getItem("idJogador"), sessionStorage.getItem("nicknameJogador"));
+
+      // Atualiza contexto global
+      dispatch({
+        type: "SET_PLAYER",
+        payload: { id: data.idJogador, nickname: data.nicknameJogador },
+      });
+
+      // Redireciona
+      navigate("/create-room", {
+        state: {
+          idJogador: sessionStorage.getItem("idJogador"),
+          nicknameJogador: sessionStorage.getItem("nicknameJogador"),
+          jwtToken: sessionStorage.getItem("token"),
+        },
+      });
+
     } catch (error) {
       console.error("Erro no cadastro:", error.message);
       setError(error.message);
