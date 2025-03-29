@@ -1,8 +1,8 @@
 import React, { useState, useContext } from "react";
 import stylesSignUp from "../style/SignUp.module.css";
 import stylesHome from "../style/Home.module.css";
-import imagemX from "../imagens/X.gif";
-import imagemO from "../imagens/O.gif";
+import imagemX from "../assets/X.gif";
+import imagemO from "../assets/O.gif";
 import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 

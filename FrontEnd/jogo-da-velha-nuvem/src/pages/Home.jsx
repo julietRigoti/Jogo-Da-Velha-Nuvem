@@ -3,8 +3,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../style/Home.module.css";
-import imagemX from "../imagens/X.gif";
-import imagemO from "../imagens/O.gif";
+import imagemX from "../assets/X.gif";
+import imagemO from "../assets/O.gif";
 
 const Home = () => {
   const navigate = useNavigate();

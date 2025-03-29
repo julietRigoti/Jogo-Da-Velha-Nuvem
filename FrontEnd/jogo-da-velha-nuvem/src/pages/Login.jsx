@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 import stylesLogin from "../style/Login.module.css";
 import stylesHome from "../style/Home.module.css";
-import imagemX from "../imagens/X.gif";
-import imagemO from "../imagens/O.gif";
+import imagemX from "../assets/X.gif";
+import imagemO from "../assets/O.gif";
 
 const Login = () => {
   const [email, setEmail] = useState("");
