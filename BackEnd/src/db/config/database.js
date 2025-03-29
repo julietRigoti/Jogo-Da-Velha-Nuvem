@@ -1,4 +1,4 @@
-// Incluir o arquivo com as variaveis de ambiente
+// Incluir o arquivo com as variáveis de ambiente
 require('dotenv').config();
 
 // Exportar as credenciais do banco de dados
@@ -8,20 +8,20 @@ module.exports = {
     "password": process.env.DB_PASS,
     "database": process.env.DB_BASE,
     "host": process.env.DB_HOST,
-    "dialect": process.env.DB_DIALECT
+    "dialect": process.env.DB_DIALECT || "postgres" // Garantir que o dialeto seja definido
   },
   "test": {
     "username": process.env.DB_USER,
-    "password": process.env.DB_PASSWO,
+    "password": process.env.DB_PASS,
     "database": process.env.DB_BASE,
     "host": process.env.DB_HOST,
-    "dialect": process.env.DB_DIALECT
+    "dialect": process.env.DB_DIALECT || "postgres"
   },
   "production": {
     "username": process.env.DB_USER,
     "password": process.env.DB_PASS,
     "database": process.env.DB_BASE,
     "host": process.env.DB_HOST,
-    "dialect": process.env.DB_DIALECT
+    "dialect": process.env.DB_DIALECT || "postgres"
   }
-}
+};

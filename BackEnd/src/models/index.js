@@ -18,6 +18,7 @@ if (config.use_env_variable) {
     logging: false, // Desabilitar logs do Sequelize
   });
 } else {
+  console.log("Usando configuração de banco de dados:", config); // Log para verificar o dialeto
   sequelize = new Sequelize(config.database, config.username, config.password, {
     host: config.host,
     dialect: config.dialect, // Certifique-se de que o dialeto está definido
