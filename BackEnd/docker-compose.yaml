@@ -11,13 +11,14 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
   redis:
-    image: redis:7.0
+    image: redis:latest
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     environment:
-      - REDIS_PASS=${REDIS_PASS} # Adicione a senha, se necessário
+      - REDIS_PASSWORD=${REDIS_PASS} # Adicione a senha, se necessário
+    command: ["redis-server", "--requirepass", "${REDIS_PASS}"] # Configura senha, se necessário
     
   backend:
     build: . 

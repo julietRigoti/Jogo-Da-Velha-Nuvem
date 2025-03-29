@@ -21,7 +21,7 @@ app.use(express.json());
 // Criar as rotas
 app.use('/', userControler);
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8081; // Alterado para usar a porta 8081
 
 // Criando servidor HTTP e integrando com o Socket.IO
 const server = http.createServer(app);
