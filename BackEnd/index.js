@@ -10,7 +10,7 @@ const app = express();
 
 // Configuração do CORS
 app.use(cors({
-    origin: "http://localhost:5173", // Permite apenas o front-end acessar o back-end
+    origin: "https://jogo-da-velha-nuvem.vercel.app", // Permite apenas o front-end acessar o back-end
     methods: ["GET", "POST", "PUT", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
@@ -21,13 +21,13 @@ app.use(express.json());
 // Criar as rotas
 app.use('/', userControler);
 
-const PORT = process.env.PORT || 8080;
+const PORT = 8080;
 
 // Criando servidor HTTP e integrando com o Socket.IO
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: "https://jogo-da-velha-nuvem.vercel.app",
         methods: ["GET", "POST", "PUT", "OPTIONS"],
     }
 });

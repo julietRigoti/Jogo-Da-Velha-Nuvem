@@ -38,7 +38,7 @@ const Login = () => {
         payload: { id: jogador.idJogador, nickname: jogador.nicknameJogador },
       });
 
-      navigate("/create-room", {
+      navigate("/criar-sala", {
         state: {
           idJogador: jogador.idJogador,
           nicknameJogador: jogador.nicknameJogador,

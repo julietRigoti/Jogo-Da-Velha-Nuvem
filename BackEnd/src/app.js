@@ -1,16 +1,16 @@
 const express = require('express');
 const db = require('./models');
 const authRoutes = require('./routes/authRoutes');
-const roomRoutes = require('./routes/roomRoutes');
-const playerRoutes = require('./routes/playerRoutes');
+const roomRoutes = require('./routes/salaRoutes');
+const playerRoutes = require('./routes/jogadorRoutes');
 
 const app = express();
 
 app.use(express.json());
 
 app.use('/auth', authRoutes);
-app.use('/rooms', roomRoutes);
-app.use('/players', playerRoutes);
+app.use('/salas', roomRoutes);
+app.use('/jogadores', playerRoutes);
 
 
 db.sequelize.authenticate()

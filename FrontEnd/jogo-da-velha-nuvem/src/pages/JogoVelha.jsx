@@ -36,6 +36,7 @@ const JogoDaVelha = () => {
       setSymbol(playerSymbol);
       console.log(`Seu símbolo é: ${playerSymbol}`);
     });
+   
 
     socket.on("updateBoard", (newBoard) => setBoard(newBoard));
     socket.on("updateScores", (updatedScores) => setScores(updatedScores));
@@ -65,9 +66,14 @@ const JogoDaVelha = () => {
       console.error("Socket não está conectado.");
       return;
     }
-
+  
+    // Verifica se a célula está vazia e se é a vez do jogador atual
     if (board[index] === null && currentPlayer === symbol) {
-      socket.emit("makeMove", { index, symbol, idSala });
+      socket.emit("fazerJogada", { idSala, index }, (response) => {
+        if (!response.sucesso) {
+          console.error("Erro ao fazer jogada:", response.mensagem);
+        }
+      });
     }
   };
 

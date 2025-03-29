@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import stylesSignUp from "../style/SignUzzp.module.css";
+import stylesSignUp from "../style/Signup.module.css";
 import stylesHome from "../style/Home.module.css";
 import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
@@ -85,7 +85,7 @@ const SignUp = () => {
       });
 
       // Redireciona
-      navigate("/create-room", {
+      navigate("/criar-sala", {
         state: {
           idJogador: sessionStorage.getItem("idJogador"),
           nicknameJogador: sessionStorage.getItem("nicknameJogador"),
