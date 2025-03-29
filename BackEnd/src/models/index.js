@@ -1,4 +1,3 @@
-// Normalizar o codigo, ajuda evitar gambiarras
 'use strict';
 require('dotenv').config();
 
@@ -7,29 +6,39 @@ const path = require('path');
 const Sequelize = require('sequelize');
 const process = require('process');
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || 'development'; // Default para 'development'
 const config = require(path.join(__dirname, '../db/config/database.js'))[env];
 const db = {};
 
 let sequelize;
 
 if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+  sequelize = new Sequelize(process.env[config.use_env_variable], {
+    ...config,
+    logging: false, // Desabilitar logs do Sequelize
+  });
 } else {
-  // Usar as configuracoes do arquivo "config/database.js"
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
+  sequelize = new Sequelize(config.database, config.username, config.password, {
+    host: config.host,
+    dialect: config.dialect, // Certifique-se de que o dialeto está definido
+    logging: false, // Desabilitar logs do Sequelize
+  });
 }
 
-// Verificar a conexao com banco de dados
-try {
-  console.log("Conexão com o banco de dados realizado com sucesso!");
-} catch (error) {
-  console.log('Erro: Conexão com o banco de dados não realizado com sucesso!', error);
-}
+// Verificar a conexão com o banco de dados
+sequelize.authenticate()
+  .then(() => {
+    console.log("Conexão com o banco de dados realizada com sucesso!");
+  })
+  .catch((error) => {
+    console.error("Erro: Conexão com o banco de dados não realizada com sucesso!", error);
+  });
 
-// Identificar o MODEL
+// Carregar os models
+const modelsPath = __dirname;
+
 fs
-  .readdirSync(__dirname)
+  .readdirSync(modelsPath)
   .filter(file => {
     return (
       file.indexOf('.') !== 0 &&
@@ -39,10 +48,11 @@ fs
     );
   })
   .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    const model = require(path.join(modelsPath, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });
 
+// Configurar associações entre os models
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
