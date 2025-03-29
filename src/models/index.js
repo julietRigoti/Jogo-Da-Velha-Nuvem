@@ -1,6 +1,0 @@
-// ...existing code...
-const sequelize = new Sequelize('JogoDaVelhaEmNuvem', 'postgres', 'root', {
-  host: 'localhost',
-  dialect: 'postgres', // Remova o espaço extra aqui
-});
-// ...existing code...
