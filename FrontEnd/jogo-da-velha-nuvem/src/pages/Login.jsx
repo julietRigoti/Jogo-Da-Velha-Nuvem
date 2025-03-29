@@ -13,48 +13,38 @@ const Login = () => {
   const { dispatch } = useContext(GameContext);
   const navigate = useNavigate();
 
-  // Função para autenticar o usuário
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); 
-  
+    setError("");
+
     try {
       const response = await fetch("http://localhost:8080/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emailJogador: email, passwordJogador: password }),
       });
-  
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Erro ao fazer login.");
 
       const { jogador, token } = data;
 
-      console.log("Token JWT:", token);
-      console.log("ID do jogador:", jogador.idJogador);
-      console.log("Nickname do jogador:", jogador.nicknameJogador);
-
-
-      // Salva dados do usuário
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("idJogador", jogador.idJogador);
       sessionStorage.setItem("nicknameJogador", jogador.nicknameJogador);
 
-      console.log("Dados para saber se o setItem funcionou: ", sessionStorage.getItem("token"), sessionStorage.getItem("idJogador"), sessionStorage.getItem("nicknameJogador"));
+      dispatch({
+        type: "SET_PLAYER",
+        payload: { id: jogador.idJogador, nickname: jogador.nicknameJogador },
+      });
 
-  
-      // Atualiza estado global do jogador
-      dispatch({ type: "SET_PLAYER", payload: { id: data.idJogador, nickname: data.nicknameJogador }});
-  
-      // Redireciona para a criação de sala
       navigate("/create-room", {
         state: {
-          idJogador: sessionStorage.getItem("idJogador"),
-          nicknameJogador: sessionStorage.getItem("nicknameJogador"),
-          jwtToken: sessionStorage.getItem("token"),
+          idJogador: jogador.idJogador,
+          nicknameJogador: jogador.nicknameJogador,
+          jwtToken: token,
         },
       });
-  
     } catch (error) {
       console.error("Erro no login:", error.message);
       setError(error.message);
@@ -66,9 +56,7 @@ const Login = () => {
       <h1 className={stylesHome.h1}>Jogo da Velha</h1>
       <div className={stylesLogin.loginContainer}>
         <h2 className={stylesHome.h2}>Entrar</h2>
-
-        {error && <p className={stylesLogin.error}>{error}</p>} {/* Exibe erro caso haja */}
-
+        {error && <p className={stylesLogin.error}>{error}</p>}
         <form onSubmit={handleLogin}>
           <div className={stylesLogin.formControlContainer}>
             <label htmlFor="email">E-mail</label>
@@ -102,16 +90,22 @@ const Login = () => {
             Entrar
           </button>
         </form>
-
         <div className={stylesLogin.mt3}>
           <a href="/signup" className={stylesLogin.textDecorationNone}>
             Não tem uma conta? Cadastre-se
           </a>
         </div>
       </div>
-
-      <img className={stylesHome.imagemX} src={imagemX} alt="Pixelart tabuleiro com X" />
-      <img className={stylesHome.imagemO} src={imagemO} alt="Pixelart tabuleiro com O" />
+      <img
+        className={stylesHome.imagemX}
+        src={imagemX}
+        alt="Pixelart tabuleiro com X"
+      />
+      <img
+        className={stylesHome.imagemO}
+        src={imagemO}
+        alt="Pixelart tabuleiro com O"
+      />
     </div>
   );
 };

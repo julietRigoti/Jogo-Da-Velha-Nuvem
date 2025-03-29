@@ -1,9 +1,7 @@
 // Incluir o arquivo com as variaveis de ambiente
-require('dotenv').config();
-
-// Incluir o arquivo com as variaveis de ambiente
 const dotenv = require('dotenv');
 
+dotenv.config();
 
 // Exportar as credenciais do banco de dados
 module.exports = { 

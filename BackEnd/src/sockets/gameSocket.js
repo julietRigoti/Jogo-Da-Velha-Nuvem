@@ -1,6 +1,7 @@
 const { Sala, Jogador, Historico } = require("../models");
 const jwt = require("jsonwebtoken");
 const Redis = require("ioredis");
+const autenticarJWT = require("../middlewares/auth"); // Middleware de autenticação JWT
 
 const redis = new Redis();
 const game = { players: {} }; // Armazena jogadores conectados
@@ -26,18 +27,6 @@ const game = { players: {} }; // Armazena jogadores conectados
 // ===============================
 // 🔒 Middleware de autenticação JWT
 // ===============================
-const autenticarJWT = (socket, next) => {
-  console.debug("🔍 Autenticando jogador...");
-
-  const token = socket.handshake.auth?.token;
-  if (!token) return next(new Error("Token não fornecido"));
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return next(new Error("Token inválido"));
-    socket.user = decoded;
-    next();
-  });
-};
 
 module.exports = (io) => {
   io.use(autenticarJWT); // Aplica autenticação para todas as conexões
