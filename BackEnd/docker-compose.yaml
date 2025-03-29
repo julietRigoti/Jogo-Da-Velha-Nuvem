@@ -16,6 +16,8 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    environment:
+      - REDIS_PASS=${REDIS_PASS} # Adicione a senha, se necessário
     
   backend:
     build: . 

@@ -2,7 +2,20 @@ const { Sala, Historico } = require("../models");
 const jwt = require("jsonwebtoken");
 const Redis = require("ioredis");
 const autenticarJWT = require("../middlewares/auth");
-const redis = new Redis();
+
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "127.0.0.1",
+  port: process.env.REDIS_PORT || 6379,
+  password: process.env.REDIS_PASS || null,
+  retryStrategy: (times) => {
+    console.error(`Tentativa de reconexão ao Redis (${times})`);
+    return Math.min(times * 50, 2000); // Tenta reconectar com intervalos crescentes
+  },
+});
+
+// Log de conexão com o Redis
+redis.on("connect", () => console.log("✅ Conectado ao Redis com sucesso."));
+redis.on("error", (err) => console.error("❌ Erro na conexão com o Redis:", err));
 
 // ===============================
 // Inicialização
