@@ -5,6 +5,24 @@ const Redis = require("ioredis");
 const redis = new Redis();
 const game = { players: {} }; // Armazena jogadores conectados
 
+
+// ===============================
+// Limpar salas ao iniciar o servidor
+// ===============================
+(async () => {
+  try {
+    const salasKeys = await redis.keys("sala:*");
+    for (const key of salasKeys) {
+      await redis.del(key);
+      console.log(`🗑️ Sala removida: ${key}`);
+    }
+    console.log("🚮 Todas as salas foram apagadas ao iniciar o servidor.");
+  } catch (error) {
+    console.error("Erro ao apagar as salas do Redis:", error);
+  }
+})();
+
+
 // ===============================
 // 🔒 Middleware de autenticação JWT
 // ===============================
@@ -197,7 +215,7 @@ module.exports = (io) => {
   
           if (salasKeys.length === 0) {
               console.warn("⚠ Nenhuma sala encontrada no Redis.");
-              callback([]);
+              //callback([]);
               return;
           }
   
@@ -215,7 +233,8 @@ module.exports = (io) => {
   
           const salasDisponiveis = salas.filter((sala) => sala && sala.jogador2 === null);
           console.log("Salas disponíveis:", salasDisponiveis); // ✅ Correção feita aqui
-  
+          refreshRooms(io); // Atualiza as salas após a criação ou entrada
+
           if (typeof callback === "function") {
               callback(salasDisponiveis);
           }
@@ -232,12 +251,39 @@ module.exports = (io) => {
     // ===============================
     socket.on("disconnect", async () => {
       console.log(`🔴 Jogador desconectado: ${socket.id}`);
-
-      await redis.del(`player:${jogador.idJogador}`);
+  
+      const idJogador = jogador.idJogador;
+      await redis.del(`player:${idJogador}`);
       delete game.players[socket.id];
+  
+      // Verifica se esse jogador estava em alguma sala
+      const salasKeys = await redis.keys("sala:*");
+      for (const key of salasKeys) {
+          const salaJSON = await redis.get(key);
+          if (!salaJSON) continue;
+          
+          const sala = JSON.parse(salaJSON);
+  
+          if (sala.jogador1?.idJogador === idJogador) {
+              sala.jogador1 = null;
+          } else if (sala.jogador2?.idJogador === idJogador) {
+              sala.jogador2 = null;
+          }
+  
+          // Se a sala ficou vazia, remove do Redis e do Banco de Dados
+          if (!sala.jogador1 && !sala.jogador2) {
+              console.log(`🗑️ Removendo sala ${sala.idSala} pois ficou vazia.`);
+              await redis.del(`sala:${sala.idSala}`);
+              await Sala.destroy({ where: { idSala: sala.idSala } });
+          } else {
+              // Atualiza a sala no Redis caso ainda tenha um jogador ativo
+              await redis.set(`sala:${sala.idSala}`, JSON.stringify(sala));
+          }
+      }
+  
+      refreshRooms(io);
+  });
 
-      refreshPlayers(io);
-    });
   });
 
   // ===============================
@@ -256,28 +302,31 @@ module.exports = (io) => {
   // ===============================
   async function refreshRooms(io) {
     try {
-        const salasKeys = await redis.keys("sala:*"); // Busca apenas as chaves com prefixo "sala:"
+        const salasKeys = await redis.keys("sala:*");
         const salas = [];
 
         for (const key of salasKeys) {
             const type = await redis.type(key);
             if (type === "string") {
                 const sala = JSON.parse(await redis.get(key));
-                salas.push(sala);
-            } else {
-                console.warn(`Chave ignorada (${key}): Tipo inesperado (${type})`);
+
+                // Apenas adiciona salas que tenham pelo menos um jogador ativo
+                if (sala.jogador1 || sala.jogador2) {
+                    salas.push(sala);
+                } else {
+                    // Se a sala estiver vazia, remove do Redis
+                    console.log(`🗑️ Removendo sala vazia: ${sala.idSala}`);
+                    await redis.del(`sala:${sala.idSala}`);
+                }
             }
         }
 
-        // Filtra apenas as salas disponíveis (jogador2 é null)
-        const salasDisponiveis = salas.filter((sala) => sala && sala.jogador2 === null);
-
-        // Emite a lista de salas disponíveis para todos os clientes conectados
-        io.emit("updateRooms", salasDisponiveis);
+        io.emit("updateRooms", salas);
     } catch (error) {
         console.error("Erro ao atualizar salas:", error);
     }
 }
+
 
   // ===============================
   // 🏆 Verificar vencedor
