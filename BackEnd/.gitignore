@@ -1,2 +1,23 @@
-node_modules/ 
+# Node.js
+node_modules/
 .env
+package-lock.json
+
+# Build
+build/
+dist/
+
+# Logs
+logs/
+*.log
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# IDEs/Editor
+.vscode/
+.idea/
+
+# Outros
+*.cache
