@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
-
-dotenv.config();
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
+});
 
 const autenticarJWT = (socket, next) => {
   console.debug("🔍 Autenticando jogador...");

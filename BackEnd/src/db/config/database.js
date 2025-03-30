@@ -1,5 +1,7 @@
 // Incluir o arquivo com as variáveis de ambiente
-require('dotenv').config();
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
+});
 
 // Exportar as credenciais do banco de dados
 module.exports = { 
