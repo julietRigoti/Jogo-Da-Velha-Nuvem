@@ -3,8 +3,11 @@ const jwt = require("jsonwebtoken");
 const Redis = require("ioredis");
 const autenticarJWT = require("../middlewares/auth");
 
-const redis  = new Redis(process.env.REDIS_URL, {
-  tls: { rejectUnauthorized: false } // Para evitar erro de SSL no Railway
+const redis = new Redis({
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  password: process.env.REDIS_PASSWORD,
+  connectTimeout: 10000, // 10 segundos
 });
 
 // Log de conexão com o Redis
