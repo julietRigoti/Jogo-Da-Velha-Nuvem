@@ -3,14 +3,8 @@ const jwt = require("jsonwebtoken");
 const Redis = require("ioredis");
 const autenticarJWT = require("../middlewares/auth");
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST || "127.0.0.1",
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASS || null,
-  retryStrategy: (times) => {
-    console.error(`Tentativa de reconexão ao Redis (${times})`);
-    return Math.min(times * 50, 2000); // Tenta reconectar com intervalos crescentes
-  },
+const redis  = new Redis(process.env.REDIS_URL, {
+  tls: { rejectUnauthorized: false } // Para evitar erro de SSL no Railway
 });
 
 // Log de conexão com o Redis

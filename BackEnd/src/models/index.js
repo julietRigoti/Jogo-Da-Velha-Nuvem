@@ -10,30 +10,16 @@ const env = process.env.NODE_ENV || 'development'; // Default para 'development'
 const config = require(path.join(__dirname, '../db/config/database.js'))[env];
 const db = {};
 
-let sequelize;
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: { require: true, rejectUnauthorized: false } // Importante para evitar erro de SSL
+  }
+});
 
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], {
-    ...config,
-    logging: false, // Desabilitar logs do Sequelize
-  });
-} else {
-  console.log("Usando configuração de banco de dados:", config); // Log para verificar o dialeto
-  sequelize = new Sequelize(config.database, config.username, config.password, {
-    host: config.host,
-    dialect: config.dialect, // Certifique-se de que o dialeto está definido
-    logging: false, // Desabilitar logs do Sequelize
-  });
-}
-
-// Verificar a conexão com o banco de dados
 sequelize.authenticate()
-  .then(() => {
-    console.log("Conexão com o banco de dados realizada com sucesso!");
-  })
-  .catch((error) => {
-    console.error("Erro: Conexão com o banco de dados não realizada com sucesso!", error);
-  });
+  .then(() => console.log('🔥 Conectado ao PostgreSQL no Railway!'))
+  .catch(err => console.error('❌ Erro ao conectar ao banco:', err));
 
 // Carregar os models
 const modelsPath = __dirname;
