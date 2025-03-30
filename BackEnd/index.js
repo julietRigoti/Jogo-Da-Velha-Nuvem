@@ -47,6 +47,6 @@ const io = new Server(server, {
 gameSocket(io);
 
 // Iniciando o servidor
-server.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+server.listen(process.env.PORT || 8080, '0.0.0.0', () => {
+    console.log(`🚀 Servidor rodando na porta ${process.env.PORT || 8080}`);
 });
