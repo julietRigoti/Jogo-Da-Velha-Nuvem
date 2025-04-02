@@ -210,13 +210,13 @@ module.exports = (io) => {
           sala.emAndamento = false;
           console.debug("🏆 Vencedor encontrado:", vencedor);
         } else {
-          // Alterna o turno corretamente
-          sala.jogador1.currentPlayer = !sala.jogador1.currentPlayer;
-          sala.jogador2.currentPlayer = !sala.jogador2.currentPlayer;
-          console.debug(
-            "🔄 Turno alternado. Próximo jogador:",
-            sala.jogador1.currentPlayer ? "X" : "O"
-          );
+          if (simbolo === "X") {
+            sala.jogador1.currentPlayer = false;
+            sala.jogador2.currentPlayer = true;
+          } else if (simbolo === "O") {
+            sala.jogador1.currentPlayer = true;
+            sala.jogador2.currentPlayer = false;
+          }
         }
     
         // Atualiza a sala no Redis

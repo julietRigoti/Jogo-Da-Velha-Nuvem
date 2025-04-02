@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 import stylesGame from "../style/Game.module.css";
 import stylesHome from "../style/Home.module.css";
-import imagemX from "../assets/X.gif";
-import imagemO from "../assets/O.gif";
 
 const JogoDaVelha = () => {
   const { state } = useContext(GameContext);
@@ -16,6 +14,7 @@ const JogoDaVelha = () => {
     board: Array(9).fill(null),
     winner: null,
     scores: { X: 0, O: 0 },
+    currentPlayer: "X", // Padrão para iniciar com X
   });
 
   // Informações do jogador
@@ -28,32 +27,23 @@ const JogoDaVelha = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  function atualizarInterfaceDoJogo(sala) {
-    // Atualiza o tabuleiro com base no estado atual
-    sala.tabuleiro.forEach((simbolo, index) => {
-      const celula = document.getElementById(`celula-${index}`);
-      if (celula) {
-        celula.textContent = simbolo || ""; // Preenche com "X", "O" ou vazio
-      }
-    });
-
-    // Atualiza o status do jogo
-    const status = document.getElementById("status-jogo");
-    if (sala.winner) {
-      status.textContent = `🏆 Vencedor: ${sala.winner}`;
-    } else if (sala.tabuleiro.every((cell) => cell !== null)) {
-      status.textContent = "Empate! O tabuleiro está cheio.";
-    } else {
-      const proximoJogador = sala.jogador1.currentPlayer ? "X" : "O";
-      if (status) {
-        status.textContent = `Próximo jogador: ${proximoJogador}`;
-      }
+  // Função auxiliar para determinar o jogador da vez com base no estado da sala
+  const getCurrentPlayer = (sala) => {
+    // Verifica se o jogador1 ou jogador2 possuem a propriedade currentPlayer com valor booleano true.
+    if (sala.jogador1 && sala.jogador1.currentPlayer === true) {
+      return "X";
     }
-  }
+    if (sala.jogador2 && sala.jogador2.currentPlayer === true) {
+      return "O";
+    }
+    // Se não estiver definido, retorna null (ou pode definir um padrão)
+    return null;
+  };
 
   useEffect(() => {
     if (!socket || !isConnected) return;
 
+    // Recupera os dados da sala
     socket.emit("recuperarSala", { idSala }, (response) => {
       if (response.sucesso) {
         console.log("🔹 Sala recuperada:", response.sala);
@@ -63,10 +53,12 @@ const JogoDaVelha = () => {
           board: response.sala.tabuleiro,
           winner: response.sala.winner || null,
           scores: response.sala.scores || { X: 0, O: 0 },
+          currentPlayer: getCurrentPlayer(response.sala) || "X",
         }));
 
         if (state.player?.idJogador) {
-          const isJogador1 = response.sala.jogador1?.idJogador === state.player.idJogador;
+          const isJogador1 =
+            response.sala.jogador1?.idJogador === state.player.idJogador;
           setPlayerInfo({
             idJogador: state.player.idJogador,
             nicknameJogador: isJogador1
@@ -84,9 +76,16 @@ const JogoDaVelha = () => {
       }
     });
 
+    // Listener para atualizações da sala
     const atualizarSalaListener = (salaAtualizada) => {
       console.log("🔄 Atualizando sala com novos dados:", salaAtualizada);
-      atualizarInterfaceDoJogo(salaAtualizada); // Função que atualiza a interface
+      setGameState((prevState) => ({
+        ...prevState,
+        board: salaAtualizada.tabuleiro,
+        winner: salaAtualizada.winner || null,
+        scores: salaAtualizada.scores || { X: 0, O: 0 },
+        currentPlayer: getCurrentPlayer(salaAtualizada) || "X",
+      }));
     };
 
     socket.on("atualizarSala", atualizarSalaListener);
@@ -116,35 +115,39 @@ const JogoDaVelha = () => {
       console.warn("⚠️ Jogada inválida! Célula já preenchida.");
       return;
     }
-    const totalJogadas = gameState.board.filter((cell) => cell !== null).length;
-    const simboloAtual = totalJogadas % 2 === 0 ? "X" : "O";
-
-    if (simboloAtual !== playerInfo.simbolo) {
+    // Verifica o turno com base na propriedade currentPlayer recebida do servidor
+    if (gameState.currentPlayer !== playerInfo.simbolo) {
       console.warn("⚠️ Não é a sua vez de jogar.");
       return;
     }
 
-    console.log(`🎯 Jogador ${playerInfo.simbolo} tentando jogar na posição ${index}`);
+    console.log(
+      `🎯 Jogador ${playerInfo.simbolo} tentando jogar na posição ${index}`
+    );
 
-    socket.emit("fazerJogada", { idSala, index, simbolo: playerInfo.simbolo }, (response) => {
-      if (response.sucesso) {
-        console.log("🔄 Atualizando estado do jogo com a resposta do servidor:", response.sala);
-        setGameState((prevState) => ({
-          ...prevState,
-          board: response.sala.tabuleiro,
-          winner: response.sala.winner || null,
-          scores: response.sala.scores || { X: 0, O: 0 },
-        }));
-        setPlayerInfo((prevState) => ({
-          ...prevState,
-          simbolo: response.sala.jogador1?.idJogador === state.player.idJogador ? "X" : "O",
-        }));
-        console.log("🔄 Estado do jogo atualizado com sucesso:", response.sala);
-        console.log("✅ Jogada feita com sucesso:", response.sala);
-      } else {
-        console.error("❌ Erro ao fazer jogada:", response.mensagem);
+    socket.emit(
+      "fazerJogada",
+      { idSala, index, simbolo: playerInfo.simbolo },
+      (response) => {
+        if (response.sucesso) {
+          console.log(
+            "🔄 Atualizando estado do jogo com a resposta do servidor:",
+            response.sala
+          );
+          setGameState((prevState) => ({
+            ...prevState,
+            board: response.sala.tabuleiro,
+            winner: response.sala.winner || null,
+            scores: response.sala.scores || { X: 0, O: 0 },
+            currentPlayer: getCurrentPlayer(response.sala) || "X",
+          }));
+
+          console.log("✅ Jogada feita com sucesso:", response.sala);
+        } else {
+          console.error("❌ Erro ao fazer jogada:", response.mensagem);
+        }
       }
-    });
+    );
   };
 
   // ==============================
@@ -159,6 +162,7 @@ const JogoDaVelha = () => {
           board: Array(9).fill(null),
           winner: null,
           scores: { X: 0, O: 0 },
+          currentPlayer: "X", // Reinicia para X
         });
       } else {
         console.error("❌ Erro ao reiniciar o jogo:", response.mensagem);
@@ -172,6 +176,12 @@ const JogoDaVelha = () => {
   if (!socket || !isConnected) {
     return <p>Conectando ao servidor...</p>;
   }
+  if (isLoading) {
+    return <p>Carregando...</p>;
+  }
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   // ==============================
   // 🔹 Renderização do tabuleiro e informações
@@ -182,7 +192,7 @@ const JogoDaVelha = () => {
         <div className={stylesGame.board}>
           {gameState.board.map((symbol, index) => (
             <div
-              key={`${symbol}-${index}`}
+              key={index}
               className={`${stylesGame.cell} ${symbol ? stylesGame[symbol] : ""}`}
               onClick={() => handleCellClick(index)}
               style={{
@@ -202,7 +212,7 @@ const JogoDaVelha = () => {
           ) : gameState.board.every((cell) => cell !== null) ? (
             <p>Empate! O tabuleiro está cheio.</p>
           ) : (
-            <p>Próximo jogador: {gameState.board.filter((cell) => cell !== null).length % 2 === 0 ? "X" : "O"}</p>
+            <p>Próximo jogador: {gameState.currentPlayer}</p>
           )}
           <button onClick={handleRestart}>Reiniciar Jogo</button>
         </div>
