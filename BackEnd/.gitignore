@@ -24,4 +24,4 @@ Thumbs.db
 *.env.local
 *.env.development
 *.env.production
-.env
+BackEnd/.env
