@@ -35,9 +35,9 @@ const Login = () => {
   
     try {
       const backendUrl =
-        import.meta.env.MODE === "development"
-          ? import.meta.env.VITE_REACT_APP_BACKEND_URL_LOCAL
-          : import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+        import.meta.env.VITE_REACT_APP_ENV === "development"
+        ? import.meta.env.VITE_REACT_APP_BACKEND_URL_LOCAL
+        : import.meta.env.nuvem.VITE_REACT_APP_BACKEND_URL_NUVEM;E_REACT_APP_BACKEND_URL_NUVEM;
   
       const response = await fetch(`${backendUrl}/auth/login`, {
         method: "POST",
