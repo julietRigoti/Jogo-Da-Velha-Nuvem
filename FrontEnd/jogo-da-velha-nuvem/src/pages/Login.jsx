@@ -7,47 +7,71 @@ import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    emailJogador: "",
+    passwordJogador: "",
+  });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { dispatch } = useContext(GameContext);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  // Atualiza os campos do formulário
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Função para lidar com o login
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    setIsLoading(true);
+  
+    if (!formData.emailJogador || !formData.passwordJogador) {
+      setError("Por favor, preencha todos os campos.");
+      setIsLoading(false);
+      return;
+    }
+  
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const backendUrl =
+        import.meta.env.MODE === "development"
+          ? import.meta.env.VITE_REACT_APP_BACKEND_URL_LOCAL
+          : import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+  
+      const response = await fetch(`${backendUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailJogador: email, passwordJogador: password }),
+        body: JSON.stringify(formData),
       });
-
+  
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Erro ao fazer login.");
-
+      if (!response.ok) throw new Error(data.message || "Erro no servidor");
+  
       const { jogador, token } = data;
-
+  
+      // Salva o token e informações do jogador no sessionStorage
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("idJogador", jogador.idJogador);
       sessionStorage.setItem("nicknameJogador", jogador.nicknameJogador);
-
+  
+      console.log("Token salvo no sessionStorage:", token);
+  
       dispatch({
         type: "SET_PLAYER",
-        payload: { id: jogador.idJogador, nickname: jogador.nicknameJogador },
-      });
-
-      navigate("/criar-sala", {
-        state: {
+        payload: {
+          token: token,
           idJogador: jogador.idJogador,
           nicknameJogador: jogador.nicknameJogador,
-          jwtToken: token,
         },
       });
+  
+      console.log("Login bem-sucedido. Redirecionando para criar sala...");
+      navigate("/criar-sala");
     } catch (error) {
-      console.error("Erro no login:", error.message);
-      setError(error.message);
+      setError(error.message || "Ocorreu um erro inesperado. Tente novamente.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,37 +81,37 @@ const Login = () => {
       <div className={stylesLogin.loginContainer}>
         <h2 className={stylesHome.h2}>Entrar</h2>
         {error && <p className={stylesLogin.error}>{error}</p>}
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
           <div className={stylesLogin.formControlContainer}>
             <label htmlFor="email">E-mail</label>
             <input
               type="email"
-              id="email"
-              name="email"
+              id="emailJogador"
+              name="emailJogador"
               className={stylesLogin.formControl}
               placeholder="Digite seu e-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.emailJogador}
+              onChange={handleChange}
               required
             />
           </div>
 
           <div className={stylesLogin.formControlContainer}>
-            <label htmlFor="password">Senha</label>
+            <label htmlFor="passwordJogador">Senha</label>
             <input
               type="password"
-              id="password"
-              name="password"
+              id="passwordJogador"
+              name="passwordJogador"
               className={stylesLogin.formControl}
               placeholder="Digite sua senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.passwordJogador}
+              onChange={handleChange}
               required
             />
           </div>
 
-          <button type="submit" className={stylesLogin.btnPrimary}>
-            Entrar
+          <button type="submit" className={stylesLogin.btnPrimary} disabled={isLoading}>
+            {isLoading ? "Carregando..." : "Entrar"}
           </button>
         </form>
         <div className={stylesLogin.mt3}>
