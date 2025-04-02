@@ -1,12 +1,5 @@
 "use strict";
 
-// Configuração do dotenv deve ser a primeira coisa no arquivo
-require("dotenv").config({
-  path: process.env.NODE_ENV === "development" ? ".env.local" : ".env",
-});
-
-console.log("🚀 Ambiente:", process.env.NODE_ENV); // Verifica se o ambiente está correto
-
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
@@ -15,14 +8,14 @@ const env = process.env.NODE_ENV || "development"; // Usa o NODE_ENV ou 'develop
 const config = require(path.join(__dirname, "../db/config/database.js"))[env];
 const db = {};
 
+const dotenv = require("dotenv");
+dotenv.config({ path: path.join(__dirname, "../../.env") });
+
 // Configuração do Sequelize
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: "postgres",
   dialectOptions: {
-    ssl:
-      process.env.NODE_ENV === "production"
-        ? { require: true, rejectUnauthorized: false }
-        : false, // Desativa SSL em desenvolvimento
+    ssl: { require: true, rejectUnauthorized: false },
   },
 });
 

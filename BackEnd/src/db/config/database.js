@@ -1,12 +1,14 @@
-const {DATABASE_URL} = process.env;
-const {Sequelize} = require("sequelize");
+require("dotenv").config(); // Certifique-se que o dotenv está carregado
 
-const sequelize = new Sequelize(DATABASE_URL, {
-  dialect: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false, // Importante para Railway
+module.exports = {
+  development: {
+    use_env_variable: "DATABASE_URL", // Pegando direto do .env
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true, // Se o banco do Railway exigir SSL
+        rejectUnauthorized: false,
+      },
     },
   },
-});
+};
