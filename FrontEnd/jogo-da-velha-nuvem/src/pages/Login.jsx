@@ -5,9 +5,6 @@ import stylesLogin from "../style/Login.module.css";
 import stylesHome from "../style/Home.module.css";
 import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
-import dotenv from "dotenv";
-
-dotenv.config({ path: ".env.production" });
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -24,7 +21,7 @@ const Login = () => {
   };
 
   const login = async () => {
-    const backendUrl = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+    const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
 
     if (!backendUrl || !backendUrl.startsWith("https://")) {
       throw new Error("Backend URL não está configurado corretamente.");

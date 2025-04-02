@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Jogador extends Model {
     /**
@@ -38,12 +36,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-    }, {
-    sequelize,
-    tableName: 'Jogador',
-    modelName: 'Jogador',
-    timestamps: false,
-    freezeTableName: true, // Isso impede o Sequelize de pluralizar a tabela
-  });
+    },
+    {
+      sequelize,
+      tableName: "Jogador",
+      modelName: "Jogador",
+      timestamps: false,
+      freezeTableName: true, // Isso impede o Sequelize de pluralizar a tabela
+    }
+  );
   return Jogador;
 };

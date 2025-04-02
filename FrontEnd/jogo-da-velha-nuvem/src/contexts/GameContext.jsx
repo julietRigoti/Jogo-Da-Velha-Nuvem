@@ -1,9 +1,8 @@
 // GameProvider.jsx (ou GameContext.js)
-import React, { useReducer, useEffect, createContext } from "react";
+import React, { useReducer, useEffect, createContext, useState } from "react";
 import socketClient from "socket.io-client";
-import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.production" });
+const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
 
 if (!backendUrl) {
   throw new Error(

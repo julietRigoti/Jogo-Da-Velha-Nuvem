@@ -1,4 +1,4 @@
-const db = require('../models');
+const db = require("../models");
 
 exports.criarSala = async (req, res) => {
   try {
@@ -8,10 +8,10 @@ exports.criarSala = async (req, res) => {
       dataCriacao: new Date(),
       qtdPartidas: 0,
     });
-    res.json({ mensagem: 'Sala criada com sucesso!', room: newRoom });
+    res.json({ mensagem: "Sala criada com sucesso!", room: newRoom });
   } catch (err) {
-    console.error('Erro ao criar sala:', err);
-    res.status(500).json({ mensagem: 'Erro ao criar sala.' });
+    console.error("Erro ao criar sala:", err);
+    res.status(500).json({ mensagem: "Erro ao criar sala." });
   }
 };
 
@@ -21,17 +21,18 @@ exports.entrarSala = async (req, res) => {
 
   try {
     const sala = await db.Sala.findByPk(idSala);
-    if (!sala) return res.status(404).json({ error: 'Sala não encontrada.' });
+    if (!sala) return res.status(404).json({ error: "Sala não encontrada." });
 
     const jogador = await db.Jogador.findByPk(idJogador);
-    if (!jogador) return res.status(404).json({ error: 'Jogador não encontrado.' });
+    if (!jogador)
+      return res.status(404).json({ error: "Jogador não encontrado." });
 
     jogador.idSala = sala.idSala;
     await jogador.save();
 
-    res.json({ message: 'Jogador entrou na sala com sucesso!' });
+    res.json({ message: "Jogador entrou na sala com sucesso!" });
   } catch (err) {
-    console.error('Erro ao entrar na sala:', err);
-    res.status(500).json({ error: 'Erro interno do servidor.' });
+    console.error("Erro ao entrar na sala:", err);
+    res.status(500).json({ error: "Erro interno do servidor." });
   }
 };

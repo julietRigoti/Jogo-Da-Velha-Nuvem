@@ -5,9 +5,8 @@ import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
 import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
-import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.production" });
+
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -56,7 +55,7 @@ const SignUp = () => {
 
     try {
       setIsLoading(true);
-      const backendUrl = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+      const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
 
       console.log("URL do backend:", backendUrl); // Para depuração
       if (!backendUrl || !backendUrl.startsWith("https://")) {

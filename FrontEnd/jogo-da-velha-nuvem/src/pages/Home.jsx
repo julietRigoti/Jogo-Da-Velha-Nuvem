@@ -1,5 +1,3 @@
-// src/pages/Home/Home.js
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../style/Home.module.css";
