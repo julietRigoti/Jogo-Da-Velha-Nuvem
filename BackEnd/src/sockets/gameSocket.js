@@ -152,62 +152,83 @@ module.exports = (io) => {
     // Fazer Jogada
     socket.on("fazerJogada", async ({ idSala, index, simbolo }, callback) => {
       try {
+        console.debug("🔍 Recebendo jogada:", { idSala, index, simbolo });
+    
         const salaJSON = await redis.get(`sala:${idSala}`);
         if (!salaJSON) {
+          console.debug("🚨 Sala não encontrada:", idSala);
           return callback?.({
             sucesso: false,
             mensagem: "Sala não encontrada.",
           });
         }
-
+    
         const sala = JSON.parse(salaJSON);
-
+        console.debug("📋 Estado atual da sala:", sala);
+    
         // Verifica se já existe um vencedor ou se o tabuleiro está cheio
         if (sala.winner || sala.tabuleiro.every((cell) => cell !== null)) {
+          console.debug("⚠️ Jogo já finalizado ou tabuleiro cheio.");
           return callback?.({
             sucesso: false,
             mensagem: "O jogo já foi finalizado.",
           });
         }
-
+    
+        console.debug("🔄 Verificando se é a vez do jogador:", simbolo);
+    
         // Verifica se é a vez do jogador correto
-        if (sala.currentPlayer !== simbolo) {
+        const isTurnoCorreto =
+          (sala.jogador1.currentPlayer && simbolo === "X") ||
+          (sala.jogador2.currentPlayer && simbolo === "O");
+    
+        if (!isTurnoCorreto) {
+          console.debug("⛔ Jogador tentou jogar fora de sua vez:", simbolo);
           return callback?.({
             sucesso: false,
             mensagem: "Não é sua vez de jogar.",
           });
         }
-
+    
         // Verifica se a jogada é válida (casa vazia)
         if (sala.tabuleiro[index] !== null) {
+          console.debug("❌ Jogada inválida na posição:", index);
           return callback?.({
             sucesso: false,
             mensagem: "Jogada inválida.",
           });
         }
-
+    
         // Registra a jogada no tabuleiro
         sala.tabuleiro[index] = simbolo;
-
+        console.debug("✅ Jogada registrada no tabuleiro:", sala.tabuleiro);
+    
         // Verifica se há um vencedor após a jogada
         const vencedor = verificarVencedor(sala.tabuleiro);
         if (vencedor) {
           sala.winner = vencedor;
           sala.emAndamento = false;
+          console.debug("🏆 Vencedor encontrado:", vencedor);
         } else {
-          // Alterna o turno corretamente
-          sala.currentPlayer = simbolo === "X" ? "O" : "X";
+          if (simbolo === "X") {
+            sala.jogador1.currentPlayer = false;
+            sala.jogador2.currentPlayer = true;
+          } else if (simbolo === "O") {
+            sala.jogador1.currentPlayer = true;
+            sala.jogador2.currentPlayer = false;
+          }
         }
-
+    
         // Atualiza a sala no Redis
         await redis.set(`sala:${idSala}`, JSON.stringify(sala));
-
-        // Envia atualização para todos os jogadores na sala
-        atualizarSala(io, idSala);
-
+        console.debug("💾 Sala atualizada no Redis:", sala);
+    
+        // Emite o estado atualizado da sala para todos os jogadores na sala
+        io.to(idSala).emit("atualizarSala", sala);
+    
         callback?.({ sucesso: true, sala });
       } catch (error) {
-        console.error("Erro ao fazer jogada:", error);
+        console.error("❌ Erro ao fazer jogada:", error);
         callback?.({ sucesso: false, mensagem: "Erro ao processar jogada." });
       }
     });
