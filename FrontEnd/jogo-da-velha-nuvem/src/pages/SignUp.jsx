@@ -5,6 +5,7 @@ import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
 import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
+dotenv.config({ path: '.env.nuvem' });
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -45,10 +46,7 @@ const SignUp = () => {
     console.log("Dados do jogador:", formData); // Aqui você pode ver os dados antes de enviar
 
     try {
-      const backendUrl =
-      import.meta.env.VITE_REACT_APP_ENV === "development"
-        ? import.meta.env.VITE_REACT_APP_BACKEND_URL_LOCAL
-        : import.meta.env.nuvem.VITE_REACT_APP_BACKEND_URL_NUVEM;
+      const backendUrl = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
       if (!backendUrl) {
         throw new Error("Backend URL não está configurado.");
       }

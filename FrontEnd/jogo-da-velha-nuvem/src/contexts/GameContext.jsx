@@ -2,10 +2,11 @@
 import React, { useReducer, useEffect, createContext } from "react";
 import socketClient from "socket.io-client";
 
-const backendUrl =
-  import.meta.env.VITE_REACT_APP_ENV === "development"
-    ? import.meta.env.VITE_REACT_APP_BACKEND_URL_LOCAL
-    : import.meta.env.nuvem.VITE_REACT_APP_BACKEND_URL_NUVEM;
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.nuvem' });
+
+const backendUrl = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
 
 if (!backendUrl) {
   throw new Error("Backend URL não está configurado.");

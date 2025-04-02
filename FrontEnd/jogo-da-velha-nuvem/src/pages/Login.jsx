@@ -5,6 +5,9 @@ import stylesLogin from "../style/Login.module.css";
 import stylesHome from "../style/Home.module.css";
 import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.nuvem' });
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -34,11 +37,8 @@ const Login = () => {
     }
   
     try {
-      const backendUrl =
-        import.meta.env.VITE_REACT_APP_ENV === "development"
-        ? import.meta.env.VITE_REACT_APP_BACKEND_URL_LOCAL
-        : import.meta.env.nuvem.VITE_REACT_APP_BACKEND_URL_NUVEM;E_REACT_APP_BACKEND_URL_NUVEM;
-  
+      const backendUrl = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+
       const response = await fetch(`${backendUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
