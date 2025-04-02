@@ -8,9 +8,11 @@ import imagemO from "../assets/O.gif";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const chooseLoginOrSignup = (tipo) => {
-    navigate(tipo === "login" ? "/login" : "/signup");
+  const chooseLoginOrSignup = (path) => {
+    setIsLoading(true);
+    navigate(`/${path}`);
   };
 
   return (
@@ -21,26 +23,30 @@ const Home = () => {
         <button
           className={styles.pixelBtnLogin}
           onClick={() => chooseLoginOrSignup("login")}
+          disabled={isLoading}
         >
-          Entrar
+          {isLoading ? "Carregando..." : "Entrar"}
         </button>
         <button
           className={styles.pixelBtnSignup}
           onClick={() => chooseLoginOrSignup("signup")}
+          disabled={isLoading}
         >
-          Criar conta
+          {isLoading ? "Carregando..." : "Criar conta"}
         </button>
       </div>
 
       <img
         className={styles.imagemX}
-        src= {imagemX}
+        src={imagemX}
         alt="Pixelart tabuleiro com X"
+        loading="lazy"
       />
       <img
         className={styles.imagemO}
-        src= {imagemO}
+        src={imagemO}
         alt="Pixelart tabuleiro com O"
+        loading="lazy"
       />
     </div>
   );

@@ -9,13 +9,15 @@ const CreateRoom = () => {
   const { state, dispatch } = React.useContext(GameContext);
   const { rooms, player, isConnected, socket } = state;
 
+  const [error, setError] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
   useEffect(() => {
     // Aguarda o socket e a conexão estarem disponíveis
     if (!socket || !isConnected) {
       return;
     }
 
-    console.log("Solicitando lista de salas...");
     socket.emit("pegarSalas", (salasAtivas) => {
       if (Array.isArray(salasAtivas)) {
         console.log("Salas recebidas do servidor:", salasAtivas);
@@ -36,16 +38,11 @@ const CreateRoom = () => {
   }, [socket, isConnected, dispatch]);
 
   const handleCreateRoom = () => {
-    if (!socket) {
-      alert("Erro: Socket não está configurado.");
+    if (!socket || !isConnected || !player) {
+      setError("Erro: Verifique sua conexão ou informações do jogador.");
       return;
     }
-
-    if (!isConnected) {
-      alert("Erro: Conexão com o servidor ainda não estabelecida.");
-      return;
-    }
-
+    setIsProcessing(true);
     socket.emit(
       "criarSala",
       {
@@ -56,7 +53,7 @@ const CreateRoom = () => {
         },
       },
       (response) => {
-        console.log("Resposta do servidor ao criar sala:", response); // Adicione este log
+        setIsProcessing(false);
         if (response.sucesso) {
           navigate(`/jogoVelha/${response.idSala}`);
         } else {
@@ -67,16 +64,11 @@ const CreateRoom = () => {
   };
 
   const handleEnterRoom = (idSala) => {
-    if (!socket) {
-      alert("Erro: Socket não está configurado.");
+    if (!socket || !isConnected || !player) {
+      setError("Erro: Verifique sua conexão ou informações do jogador.");
       return;
     }
-
-    if (!isConnected) {
-      alert("Erro: Conexão com o servidor ainda não estabelecida.");
-      return;
-    }
-
+    setIsProcessing(true);
     socket.emit(
       "entrarSala",
       {
@@ -87,6 +79,7 @@ const CreateRoom = () => {
         },
       },
       (response) => {
+        setIsProcessing(false);
         if (response.sucesso) {
           navigate(`/jogoVelha/${idSala}`);
         } else {
@@ -104,7 +97,9 @@ const CreateRoom = () => {
   return (
     <div className={styles.roomPainel}>
       <h1>Criar Sala</h1>
-      <button onClick={handleCreateRoom}>Criar Nova Sala</button>
+      <button onClick={handleCreateRoom} disabled={isProcessing}>
+        {isProcessing ? "Criando Sala..." : "Criar Nova Sala"}
+      </button>
       <h2>Salas Disponíveis</h2>
       {rooms && rooms.length > 0 ? (
         <ul>

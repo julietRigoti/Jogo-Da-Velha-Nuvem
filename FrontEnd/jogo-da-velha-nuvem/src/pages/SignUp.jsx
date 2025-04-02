@@ -5,7 +5,9 @@ import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
 import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
-dotenv.config({ path: '.env.nuvem' });
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.production" });
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -24,34 +26,44 @@ const SignUp = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Validações do formulário
+  const validateForm = () => {
+    if (formData.nicknameJogador.trim().length < 3) {
+      return "O nickname deve ter pelo menos 3 caracteres!";
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.emailJogador)) {
+      return "O e-mail deve ser válido!";
+    }
+    if (formData.passwordJogador.length < 6) {
+      return "A senha deve ter pelo menos 6 caracteres!";
+    }
+    if (formData.passwordJogador !== formData.confirmPassword) {
+      return "As senhas não coincidem!";
+    }
+    return null;
+  };
+
   // Função para enviar os dados ao backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Validações organizadas
-    if (formData.nicknameJogador.trim().length < 3) {
-      return setError("O nickname deve ter pelo menos 3 caracteres!");
+    // Valida o formulário
+    const errorMessage = validateForm();
+    if (errorMessage) {
+      return setError(errorMessage);
     }
-    if (!/\S+@\S+\.\S+/.test(formData.emailJogador)) {
-      return setError("O e-mail deve ser válido!");
-    }
-    if (formData.passwordJogador.length < 6) {
-      return setError("A senha deve ter pelo menos 6 caracteres!");
-    }
-    if (formData.passwordJogador !== formData.confirmPassword) {
-      return setError("As senhas não coincidem!");
-    }
-
-    console.log("Dados do jogador:", formData); // Aqui você pode ver os dados antes de enviar
 
     try {
+      setIsLoading(true);
       const backendUrl = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
-      if (!backendUrl) {
-        throw new Error("Backend URL não está configurado.");
+
+      console.log("URL do backend:", backendUrl); // Para depuração
+      if (!backendUrl || !backendUrl.startsWith("https://")) {
+        throw new Error("Backend URL não está configurado corretamente.");
       }
-      console.log("URL do backend:", backendUrl); // Aqui você pode ver a URL do backend
-      const response = await fetch(`${backendUrl}/auth/signup`, { //precisa mudar esse link para o do backend na nuvem
+
+      const response = await fetch(`${backendUrl}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,10 +75,13 @@ const SignUp = () => {
 
       const data = await response.json();
 
-      console.log("Resposta do servidor:", data); // Aqui você pode ver a resposta do servidor
-      if (!response.ok) throw new Error(data.message || "Erro no servidor");
+      console.log("Resposta do servidor:", data); // Para depuração
+      if (!response.ok) {
+        const errorMessage = data.message || "Erro no servidor";
+        throw new Error(errorMessage);
+      }
 
-      const { jogador, token } = data; // Extrair os dados do jogador e o token
+      const { jogador, token } = data;
       if (!jogador || !token) {
         throw new Error("Dados incompletos recebidos do servidor.");
       }
@@ -159,8 +174,8 @@ const SignUp = () => {
             />
           </div>
 
-          <button type="submit" className={stylesSignUp.btnSubmit}>
-            Cadastrar
+          <button type="submit" className={stylesSignUp.btnSubmit} disabled={isLoading}>
+            {isLoading ? "Cadastrando..." : "Cadastrar"}
           </button>
         </form>
 

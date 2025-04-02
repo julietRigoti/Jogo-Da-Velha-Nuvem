@@ -95,45 +95,38 @@ const JogoDaVelha = () => {
     };
   }, [socket, isConnected, idSala, state.player?.idJogador]);
 
-  // ==============================
-  // 🔹 Função para realizar uma jogada
-  // ==============================
-  const handleCellClick = (index) => {
+  const canMakeMove = (index) => {
     if (!socket) {
-      console.error("🚨 Socket não está disponível.");
-      return;
+      setError("Socket não está disponível.");
+      return false;
     }
     if (!isConnected) {
-      console.error("🚨 Conexão com o servidor ainda não foi estabelecida.");
-      return;
+      setError("Conexão com o servidor ainda não foi estabelecida.");
+      return false;
     }
     if (!playerInfo.simbolo) {
-      console.warn("⚠️ Seu símbolo ainda não foi carregado.");
-      return;
+      setError("Seu símbolo ainda não foi carregado.");
+      return false;
     }
     if (gameState.board[index] !== null) {
-      console.warn("⚠️ Jogada inválida! Célula já preenchida.");
-      return;
+      setError("Jogada inválida! Célula já preenchida.");
+      return false;
     }
-    // Verifica o turno com base na propriedade currentPlayer recebida do servidor
     if (gameState.currentPlayer !== playerInfo.simbolo) {
-      console.warn("⚠️ Não é a sua vez de jogar.");
-      return;
+      setError("Não é a sua vez de jogar.");
+      return false;
     }
+    return true;
+  };
 
-    console.log(
-      `🎯 Jogador ${playerInfo.simbolo} tentando jogar na posição ${index}`
-    );
+  const handleCellClick = (index) => {
+    if (!canMakeMove(index)) return;
 
     socket.emit(
       "fazerJogada",
       { idSala, index, simbolo: playerInfo.simbolo },
       (response) => {
         if (response.sucesso) {
-          console.log(
-            "🔄 Atualizando estado do jogo com a resposta do servidor:",
-            response.sala
-          );
           setGameState((prevState) => ({
             ...prevState,
             board: response.sala.tabuleiro,
@@ -141,10 +134,8 @@ const JogoDaVelha = () => {
             scores: response.sala.scores || { X: 0, O: 0 },
             currentPlayer: getCurrentPlayer(response.sala) || "X",
           }));
-
-          console.log("✅ Jogada feita com sucesso:", response.sala);
         } else {
-          console.error("❌ Erro ao fazer jogada:", response.mensagem);
+          setError(response.mensagem || "Erro ao fazer jogada.");
         }
       }
     );
@@ -165,7 +156,7 @@ const JogoDaVelha = () => {
           currentPlayer: "X", // Reinicia para X
         });
       } else {
-        console.error("❌ Erro ao reiniciar o jogo:", response.mensagem);
+        setError(response.mensagem || "Erro ao iniciar o jogo.");
       }
     });
   };
@@ -198,6 +189,8 @@ const JogoDaVelha = () => {
               style={{
                 cursor: playerInfo.simbolo && symbol === null ? "pointer" : "not-allowed",
               }}
+              role="button"
+              aria-label={`Célula ${index + 1}, ${symbol || "vazia"}`}
             >
               {symbol}
             </div>
@@ -208,7 +201,10 @@ const JogoDaVelha = () => {
           <h2>Jogo da Velha</h2>
           <p>Você é: {playerInfo.simbolo}</p>
           {gameState.winner ? (
-            <p>Vencedor: {gameState.winner}</p>
+            <div className={stylesGame.winnerMessage}>
+              <h2>Vencedor: {gameState.winner}</h2>
+              <button onClick={handleRestart}>Reiniciar Jogo</button>
+            </div>
           ) : gameState.board.every((cell) => cell !== null) ? (
             <p>Empate! O tabuleiro está cheio.</p>
           ) : (

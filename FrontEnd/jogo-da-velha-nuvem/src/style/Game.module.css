@@ -48,6 +48,31 @@
 .cell.not-allowed {
   cursor: not-allowed;
 }
+
+.cell.X {
+  background-color: #f8bc63;
+  color: #112736;
+}
+.cell.O {
+  background-color: #efdebb;
+  color: #112736;
+}
+
+.winnerMessage {
+  text-align: center;
+  margin-top: 20px;
+  color: green;
+  font-weight: bold;
+}
+
+/* Mensagem de erro */
+.errorMessage {
+  text-align: center;
+  margin-top: 20px;
+  color: red;
+  font-weight: bold;
+}
+
 /* Painel de informações */
 .infoPainel {
   display: flex;
@@ -75,8 +100,8 @@
 }
 .restartButton {
   width: 65%;
-  background-color: #112736;
-  color: #f8bc63;
+  background-color: #f8bc63;
+  color: #112736;
   cursor: pointer;
   display: flex;
   justify-content: center;

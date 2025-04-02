@@ -1,17 +1,19 @@
 // GameProvider.jsx (ou GameContext.js)
 import React, { useReducer, useEffect, createContext } from "react";
 import socketClient from "socket.io-client";
+import dotenv from "dotenv";
 
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.nuvem' });
-
-const backendUrl = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+dotenv.config({ path: ".env.production" });
 
 if (!backendUrl) {
-  throw new Error("Backend URL não está configurado.");
+  throw new Error(
+    "Backend URL não está configurado. Verifique o arquivo .env.nuvem e certifique-se de que a variável VITE_REACT_APP_BACKEND_URL_NUVEM está definida."
+  );
 }
-console.log("URL do backend:", backendUrl);
+
+if (process.env.NODE_ENV === "development") {
+  console.log("URL do backend:", backendUrl);
+}
 
 const socket = socketClient(backendUrl, {
   autoConnect: false,
@@ -71,8 +73,8 @@ const GameProvider = ({ children, navigate }) => {
   };
 
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [error, setError] = useState("");
 
-  // Efeito executado na montagem para redirecionar caso não haja token
   useEffect(() => {
     const storedToken = sessionStorage.getItem("token");
     if (!storedToken) {
@@ -82,28 +84,27 @@ const GameProvider = ({ children, navigate }) => {
     }
   }, [navigate]);
 
-  // Efeito para configurar e conectar o socket quando o token estiver disponível ou mudar
   useEffect(() => {
-    if (state.player.token) {
+    if (state.player.token && !socket.connected) {
       socket.auth = { token: state.player.token };
-      if (!socket.connected) {
-        socket.connect();
-      }
+      socket.connect();
       dispatch({ type: ACTIONS.SET_SOCKET, payload: socket });
     }
   }, [state.player.token]);
 
-  // Registro dos eventos do socket
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket conectado com sucesso:", socket.id);
       dispatch({ type: ACTIONS.CONNECTED, payload: true });
     });
-    socket.on("disconnect", () =>
-      dispatch({ type: ACTIONS.CONNECTED, payload: false })
-    );
+
+    socket.on("disconnect", () => {
+      dispatch({ type: ACTIONS.CONNECTED, payload: false });
+    });
+
     socket.on("connect_error", (err) => {
       console.error("Erro de conexão do socket:", err.message);
+      setError("Erro ao conectar ao servidor. Tente novamente mais tarde.");
       dispatch({ type: ACTIONS.CONNECTED, payload: false });
     });
 
@@ -116,9 +117,8 @@ const GameProvider = ({ children, navigate }) => {
     };
   }, []);
 
-
   return (
-    <GameContext.Provider value={{ state, dispatch }}>
+    <GameContext.Provider value={{ state, dispatch, error }}>
       {children}
     </GameContext.Provider>
   );

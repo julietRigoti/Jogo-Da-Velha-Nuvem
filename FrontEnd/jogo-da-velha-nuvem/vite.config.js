@@ -3,9 +3,10 @@ import react from '@vitejs/plugin-react';
 import dotenv from 'dotenv';
 
 // Carrega o arquivo .env.nuvem
-dotenv.config({ path: '.env.nuvem' });
+dotenv.config({ path: '.env.production' });
 
 const url = process.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+console.log('URL do backend:', url);
 
 if (!url) {
   console.warn('⚠️ A variável VITE_REACT_APP_BACKEND_URL_NUVEM não está definida no arquivo .env.nuvem');
@@ -14,7 +15,8 @@ if (!url) {
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    proxy: url
+    host: '0.0.0.0',
+    proxy: url && url.startsWith('http')
       ? {
           '/auth': {
             target: url,
@@ -23,6 +25,15 @@ export default defineConfig({
           },
         }
       : undefined,
+    build: {
+      outDir: '../dist',
+      sourcemap: true,
+      rollupOptions: {
+        output: {
+          vendor: ['react', 'react-dom'], // Divide dependências em chunks separados
+        },
+      },
+    },
   },
   plugins: [react()],
 });
