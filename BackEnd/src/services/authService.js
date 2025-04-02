@@ -1,12 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const usuarioJogador = require("../models/Jogador");
-
-require("dotenv").config({
-  path: process.env.NODE_ENV === "development" ? ".env" : ".env.nuvem",
-});
-
-console.log("A variável de ambiente NODE_ENV é:", process.env.NODE_ENV); // Verifica o ambiente
+const usuarioJogador = require("../models/Jogador"); // Verifica o ambiente
 
 const generateToken = (usuario) =>
   jwt.sign({ id: usuario.idJogador }, process.env.JWT_SECRET, {

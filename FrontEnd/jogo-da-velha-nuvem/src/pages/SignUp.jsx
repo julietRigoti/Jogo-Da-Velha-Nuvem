@@ -6,8 +6,6 @@ import imagemO from "../assets/O.gif";
 import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 
-
-
 const SignUp = () => {
   const [formData, setFormData] = useState({
     nicknameJogador: "",
@@ -55,10 +53,10 @@ const SignUp = () => {
 
     try {
       setIsLoading(true);
-      const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+      const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND;
 
       console.log("URL do backend:", backendUrl); // Para depuração
-      if (!backendUrl || !backendUrl.startsWith("https://")) {
+      if (!backendUrl || !backendUrl.startsWith("https")) {
         throw new Error("Backend URL não está configurado corretamente.");
       }
 

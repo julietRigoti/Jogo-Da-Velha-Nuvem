@@ -1,10 +1,3 @@
-// Incluir o arquivo com as variáveis de ambiente
-require("dotenv").config({
-  path: process.env.NODE_ENV === "development" ? ".env" : ".env.nuvem",
-});
-
-console.log("A variável de ambiente NODE_ENV é:", process.env.NODE_ENV); // Verifica o ambiente
-
 // Exportar as credenciais do banco de dados
 module.exports = {
   development: {

@@ -1,5 +1,5 @@
 // CreateRoom.jsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 import styles from "../style/Room.module.css";

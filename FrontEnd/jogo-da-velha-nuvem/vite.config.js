@@ -1,35 +1,44 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig, loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
 
-const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
-console.log('URL do backend:', backendUrl);
+export default defineConfig(({ mode }) => {
+  // Carrega as variáveis de ambiente do arquivo correto (.env ou .env.production)
+  const env = loadEnv(mode, process.cwd(), "");
 
-if (!backendUrl) {
-  console.warn('⚠️ A variável VITE_REACT_APP_BACKEND_URL_NUVEM não está definida no arquivo .env.production');
-}
+  console.log("Modo de ambiente:", mode);
+  console.log("VITE_REACT_APP_ENV:", env.VITE_REACT_APP_ENV);
 
-// https://vite.dev/config/
-export default defineConfig({
-  server: {
-    host: '0.0.0.0',
-    proxy:backendUrl && backendUrl.startsWith('http')
-      ? {
-          '/auth': {
-            target: backendUrl,
-            changeOrigin: true,
-            secure: false,
-          },
-        }
-      : undefined,
+  const backendUrl = env.VITE_REACT_APP_BACKEND_URL || "";
+  console.log("URL do backend:", backendUrl);
+
+  if (!backendUrl) {
+    console.warn("⚠️ A variável VITE_REACT_APP_BACKEND_URL não está definida.");
+  }
+
+  return {
+    server: {
+      host: "0.0.0.0",
+      proxy: backendUrl.startsWith("http")
+        ? {
+            "/auth": {
+              target: backendUrl,
+              changeOrigin: true,
+              secure: false,
+            },
+          }
+        : undefined,
+    },
     build: {
-      outDir: '../dist',
+      outDir: "../dist",
       sourcemap: true,
       rollupOptions: {
         output: {
-          vendor: ['react', 'react-dom'], // Divide dependências em chunks separados
+          manualChunks: {
+            vendor: ["react", "react-dom"],
+          },
         },
       },
     },
-  },
-  plugins: [react()],
+    plugins: [react()],
+  };
 });

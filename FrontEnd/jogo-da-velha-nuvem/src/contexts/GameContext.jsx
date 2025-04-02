@@ -2,15 +2,15 @@
 import React, { useReducer, useEffect, createContext, useState } from "react";
 import socketClient from "socket.io-client";
 
-const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
 if (!backendUrl) {
   throw new Error(
-    "Backend URL não está configurado. Verifique o arquivo .env.nuvem e certifique-se de que a variável VITE_REACT_APP_BACKEND_URL_NUVEM está definida."
+    "Backend URL não está configurado. Verifique o arquivo .env.production e certifique-se de que a variável VITE_REACT_APP_BACKEND_URL_NUVEM está definida."
   );
 }
 
-if (process.env.NODE_ENV === "development") {
+if (import.meta.env.VITE_REACT_APP_ENV === "development") {
   console.log("URL do backend:", backendUrl);
 }
 

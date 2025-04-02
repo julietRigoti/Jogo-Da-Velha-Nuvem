@@ -1,15 +1,15 @@
-require("dotenv").config({
-  path: process.env.NODE_ENV === "development" ? ".env" : ".env.nuvem",
-});
-
-console.log("A variável de ambiente NODE_ENV é:", process.env.NODE_ENV); // Verifica o ambiente
-
 const express = require("express");
 const cors = require("cors"); // Importa o middleware de CORS
 const http = require("http");
 const { Server } = require("socket.io");
 const gameSocket = require("./src/sockets/gameSocket");
 const userControler = require("./src/app");
+
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+require("dotenv").config({ path: envFile });
+
+console.log("🚀 Ambiente:", process.env.NODE_ENV); // Verifica se o ambiente está corret
+console.log("URL do banco de dados:", process.env.DATABASE_URL); // Verifica a URL do banco de dados
 
 const app = express();
 
