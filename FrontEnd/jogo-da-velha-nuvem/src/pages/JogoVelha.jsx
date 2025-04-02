@@ -15,7 +15,6 @@ const JogoDaVelha = () => {
   const [gameState, setGameState] = useState({
     board: Array(9).fill(null),
     winner: null,
-    currentPlayer: "X",
     scores: { X: 0, O: 0 },
   });
 
@@ -29,9 +28,29 @@ const JogoDaVelha = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ==============================
-  // 🔹 Efeito para recuperar o estado da sala ao conectar
-  // ==============================
+  function atualizarInterfaceDoJogo(sala) {
+    // Atualiza o tabuleiro com base no estado atual
+    sala.tabuleiro.forEach((simbolo, index) => {
+      const celula = document.getElementById(`celula-${index}`);
+      if (celula) {
+        celula.textContent = simbolo || ""; // Preenche com "X", "O" ou vazio
+      }
+    });
+
+    // Atualiza o status do jogo
+    const status = document.getElementById("status-jogo");
+    if (sala.winner) {
+      status.textContent = `🏆 Vencedor: ${sala.winner}`;
+    } else if (sala.tabuleiro.every((cell) => cell !== null)) {
+      status.textContent = "Empate! O tabuleiro está cheio.";
+    } else {
+      const proximoJogador = sala.jogador1.currentPlayer ? "X" : "O";
+      if (status) {
+        status.textContent = `Próximo jogador: ${proximoJogador}`;
+      }
+    }
+  }
+
   useEffect(() => {
     if (!socket || !isConnected) return;
 
@@ -39,12 +58,12 @@ const JogoDaVelha = () => {
       if (response.sucesso) {
         console.log("🔹 Sala recuperada:", response.sala);
 
-        setGameState({
+        setGameState((prevState) => ({
+          ...prevState,
           board: response.sala.tabuleiro,
           winner: response.sala.winner || null,
-          currentPlayer: response.sala.currentPlayer || "X",
           scores: response.sala.scores || { X: 0, O: 0 },
-        });
+        }));
 
         if (state.player?.idJogador) {
           const isJogador1 = response.sala.jogador1?.idJogador === state.player.idJogador;
@@ -67,13 +86,7 @@ const JogoDaVelha = () => {
 
     const atualizarSalaListener = (salaAtualizada) => {
       console.log("🔄 Atualizando sala com novos dados:", salaAtualizada);
-
-      setGameState({
-        board: salaAtualizada.tabuleiro,
-        winner: salaAtualizada.winner || null,
-        currentPlayer: salaAtualizada.currentPlayer || "X",
-        scores: salaAtualizada.scores || { X: 0, O: 0 },
-      });
+      atualizarInterfaceDoJogo(salaAtualizada); // Função que atualiza a interface
     };
 
     socket.on("atualizarSala", atualizarSalaListener);
@@ -103,7 +116,10 @@ const JogoDaVelha = () => {
       console.warn("⚠️ Jogada inválida! Célula já preenchida.");
       return;
     }
-    if (gameState.currentPlayer !== playerInfo.simbolo) {
+    const totalJogadas = gameState.board.filter((cell) => cell !== null).length;
+    const simboloAtual = totalJogadas % 2 === 0 ? "X" : "O";
+
+    if (simboloAtual !== playerInfo.simbolo) {
       console.warn("⚠️ Não é a sua vez de jogar.");
       return;
     }
@@ -117,7 +133,6 @@ const JogoDaVelha = () => {
           ...prevState,
           board: response.sala.tabuleiro,
           winner: response.sala.winner || null,
-          currentPlayer: response.sala.currentPlayer || "X",
           scores: response.sala.scores || { X: 0, O: 0 },
         }));
         setPlayerInfo((prevState) => ({
@@ -143,7 +158,6 @@ const JogoDaVelha = () => {
         setGameState({
           board: Array(9).fill(null),
           winner: null,
-          currentPlayer: "X",
           scores: { X: 0, O: 0 },
         });
       } else {
@@ -172,7 +186,7 @@ const JogoDaVelha = () => {
               className={`${stylesGame.cell} ${symbol ? stylesGame[symbol] : ""}`}
               onClick={() => handleCellClick(index)}
               style={{
-                cursor: gameState.currentPlayer === playerInfo.simbolo && !symbol ? "pointer" : "not-allowed",
+                cursor: playerInfo.simbolo && symbol === null ? "pointer" : "not-allowed",
               }}
             >
               {symbol}
@@ -183,8 +197,13 @@ const JogoDaVelha = () => {
         <div className={stylesGame.infoPainel}>
           <h2>Jogo da Velha</h2>
           <p>Você é: {playerInfo.simbolo}</p>
-          <p>Próximo jogador: {gameState.currentPlayer}</p>
-          <p>Vencedor: {gameState.winner || "Nenhum"}</p>
+          {gameState.winner ? (
+            <p>Vencedor: {gameState.winner}</p>
+          ) : gameState.board.every((cell) => cell !== null) ? (
+            <p>Empate! O tabuleiro está cheio.</p>
+          ) : (
+            <p>Próximo jogador: {gameState.board.filter((cell) => cell !== null).length % 2 === 0 ? "X" : "O"}</p>
+          )}
           <button onClick={handleRestart}>Reiniciar Jogo</button>
         </div>
       </div>

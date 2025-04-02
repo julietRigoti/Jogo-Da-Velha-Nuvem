@@ -45,6 +45,9 @@
   border-bottom: none;
 }
 
+.cell.not-allowed {
+  cursor: not-allowed;
+}
 /* Painel de informações */
 .infoPainel {
   display: flex;

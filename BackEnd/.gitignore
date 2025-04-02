@@ -22,3 +22,5 @@ Thumbs.db
 *.cache
 
 .env
+.env.local
+.env.nuvem
