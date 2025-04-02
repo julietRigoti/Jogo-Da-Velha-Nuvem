@@ -218,13 +218,9 @@ module.exports = (io) => {
             sala.jogador2.currentPlayer = false;
           }
         }
-
         // Atualiza a sala no Redis
         await redis.set(`sala:${idSala}`, JSON.stringify(sala));
         console.debug("💾 Sala atualizada no Redis:", sala);
-
-        // Emite o estado atualizado da sala para todos os jogadores na sala
-        io.to(idSala).emit("atualizarSala", sala);
 
         callback?.({ sucesso: true, sala });
       } catch (error) {

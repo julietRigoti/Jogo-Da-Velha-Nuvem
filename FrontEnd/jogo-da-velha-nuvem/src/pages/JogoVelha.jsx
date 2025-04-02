@@ -88,6 +88,7 @@ const JogoDaVelha = () => {
       }));
     };
 
+    
     socket.on("atualizarSala", atualizarSalaListener);
 
     return () => {
@@ -160,20 +161,6 @@ const JogoDaVelha = () => {
       }
     });
   };
-
-  // ==============================
-  // 🔹 Tratamento para erro ou carregamento
-  // ==============================
-  if (!socket || !isConnected) {
-    return <p>Conectando ao servidor...</p>;
-  }
-  if (isLoading) {
-    return <p>Carregando...</p>;
-  }
-  if (error) {
-    return <p>{error}</p>;
-  }
-
   // ==============================
   // 🔹 Renderização do tabuleiro e informações
   // ==============================
