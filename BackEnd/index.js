@@ -1,6 +1,8 @@
 require('dotenv').config({
-    path: process.env.NODE_ENV === 'development' ? '.env.nuvem' : '.env',
-});
+    path: process.env.NODE_ENV === 'development' ? '.env' : '.env.nuvem',
+  });
+  
+  console.log("A variável de ambiente NODE_ENV é:", process.env.NODE_ENV); // Verifica o ambiente
 
 const express = require('express');
 const cors = require('cors'); // Importa o middleware de CORS
@@ -47,6 +49,6 @@ const io = new Server(server, {
 gameSocket(io);
 
 // Iniciando o servidor
-server.listen(process.env.PORT || 8080, '0.0.0.0', () => {
-    console.log(`🚀 Servidor rodando na porta ${process.env.PORT || 8080}`);
+server.listen(process.env.PORT || PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor rodando na porta ${process.env.PORT || PORT}`);
 });
