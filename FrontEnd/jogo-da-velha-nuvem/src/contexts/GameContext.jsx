@@ -1,5 +1,5 @@
 // GameProvider.jsx (ou GameContext.js)
-import React, { useReducer, useEffect, createContext, useState } from "react";
+import React, { useReducer, useEffect, createContext, useState, } from "react";
 import socketClient from "socket.io-client";
 
 const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;

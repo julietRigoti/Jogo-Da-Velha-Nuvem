@@ -120,9 +120,12 @@ const Login = () => {
           </button>
         </form>
         <div className={stylesLogin.mt3}>
-          <a href="/signup" className={stylesLogin.textDecorationNone}>
+          <button
+            className={stylesLogin.textDecorationNone}
+            onClick={() => navigate("/signup")}
+          >
             Não tem uma conta? Cadastre-se
-          </a>
+          </button>
         </div>
       </div>
       <img
