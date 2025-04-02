@@ -1,19 +1,12 @@
-// Exportar as credenciais do banco de dados
-require('dotenv').config(); 
+const {DATABASE_URL} = process.env;
+const {Sequelize} = require("sequelize");
 
-module.exports = { 
-  development: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_BASE,
-    host: process.env.DB_HOST,
-    dialect: (process.env.DB_DIALECT || 'postgres').trim(), // Garantir que o dialeto seja definido
+const sequelize = new Sequelize(DATABASE_URL, {
+  dialect: "postgres",
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // Importante para Railway
+    },
   },
-  production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_BASE,
-    host: process.env.DB_HOST,
-    dialect: (process.env.DB_DIALECT || 'postgres').trim(), // Garantir que o dialeto seja definido
-  }
-};
+});

@@ -2,12 +2,7 @@ const { Sala, Historico } = require("../models");
 const jwt = require("jsonwebtoken");
 const Redis = require("ioredis");
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASS,
-  connectTimeout: 10000, // 10 segundos
-});
+const redis = new Redis(process.env.REDIS_URL);
 
 // Log de conexão com o Redis
 redis.on("connect", () => console.log("✅ Conectado ao Redis com sucesso."));
