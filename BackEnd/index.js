@@ -33,8 +33,6 @@ app.use(express.json());
 // Criar as rotas
 app.use("/", userControler);
 
-const PORT = process.env.PORT;
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
