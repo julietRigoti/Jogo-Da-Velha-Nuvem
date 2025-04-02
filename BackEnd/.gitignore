@@ -21,6 +21,8 @@ Thumbs.db
 # Outros
 *.cache
 
-.env
-.env.local
-.env.nuvem
+*.env
+*.env.local
+*.env.development
+*.env.production
+*.pem
