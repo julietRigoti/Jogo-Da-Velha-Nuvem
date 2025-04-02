@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
         : undefined,
     },
     build: {
-      outDir: "../dist",
+      outDir: "dist",
       sourcemap: true,
       rollupOptions: {
         output: {
