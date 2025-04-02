@@ -14,6 +14,7 @@ const SignUp = () => {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { dispatch } = useContext(GameContext);
   const navigate = useNavigate();
 
@@ -44,12 +45,18 @@ const SignUp = () => {
     console.log("Dados do jogador:", formData); // Aqui você pode ver os dados antes de enviar
 
     try {
-      const response = await fetch("http://localhost:8080/auth/signup", {
+      const backendUrl =
+        import.meta.env.MODE === "development"
+          ? import.meta.env.VITE_REACT_APP_BACKEND_URL_LOCAL
+          : import.meta.env.VITE_REACT_APP_BACKEND_URL_NUVEM;
+      if (!backendUrl) {
+        throw new Error("Backend URL não está configurado.");
+      }
+      console.log("URL do backend:", backendUrl); // Aqui você pode ver a URL do backend
+      const response = await fetch(`${backendUrl}/auth/signup`, { //precisa mudar esse link para o do backend na nuvem
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          idJogador: null, // O idJogador será gerado automaticamente pelo banco de dados
-          pontuacaoJogadorXP: 0, // Valor padrão
           nicknameJogador: formData.nicknameJogador,
           emailJogador: formData.emailJogador,
           passwordJogador: formData.passwordJogador,
@@ -66,46 +73,39 @@ const SignUp = () => {
         throw new Error("Dados incompletos recebidos do servidor.");
       }
 
+      // Atualiza o contexto global
+      dispatch({
+        type: "SET_PLAYER",
+        payload: {
+          id: jogador.idJogador,
+          nickname: jogador.nicknameJogador,
+          token: token,
+        },
+      });
 
-      console.log("Token JWT:", token);
-      console.log("ID do jogador:", jogador.idJogador);
-      console.log("Nickname do jogador:", jogador.nicknameJogador);
-
-      // Salva o token e informações do usuário
+      // Salva informações do jogador no sessionStorage
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("idJogador", jogador.idJogador);
       sessionStorage.setItem("nicknameJogador", jogador.nicknameJogador);
 
-      console.log("Verificar se o idJogador e nicknameJogador estão salvos corretamente no sessionStorage:", sessionStorage.getItem("idJogador"), sessionStorage.getItem("nicknameJogador"));
-
-      // Atualiza contexto global
-      dispatch({
-        type: "SET_PLAYER",
-        payload: { id: data.idJogador, nickname: data.nicknameJogador },
-      });
-
-      // Redireciona
-      navigate("/create-room", {
-        state: {
-          idJogador: sessionStorage.getItem("idJogador"),
-          nicknameJogador: sessionStorage.getItem("nicknameJogador"),
-          jwtToken: sessionStorage.getItem("token"),
-        },
-      });
-
+      // Redireciona para a página de criação de sala
+      navigate("/criar-sala");
     } catch (error) {
-      console.error("Erro no cadastro:", error.message);
-      setError(error.message);
+      if (error.message === "Failed to fetch") {
+        setError("Erro de conexão com o servidor. Tente novamente mais tarde.");
+      } else {
+        setError(error.message || "Ocorreu um erro inesperado. Tente novamente.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className={stylesSignUp.principalDiv}>
       <h1 className={stylesHome.h1}>Jogo da Velha</h1>
-
       <div className={stylesSignUp.signUpContainer}>
         <h2>Cadastre-se</h2>
-
         {error && <p className={stylesSignUp.error}>{error}</p>}
 
         <form onSubmit={handleSubmit} className={stylesSignUp.signUpForm}>

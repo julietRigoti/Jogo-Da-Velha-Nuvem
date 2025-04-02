@@ -1,46 +1,38 @@
-// Normalizar o codigo, ajuda evitar gambiarras
 'use strict';
-require('dotenv').config();
 
-// Permite trabalhar com o sistema de arquivos do computador
+// Configuração do dotenv deve ser a primeira coisa no arquivo
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
+});
+
+console.log("🚀 Ambiente:", process.env.NODE_ENV); // Verifica se o ambiente está correto
+
 const fs = require('fs');
-// Fornece utilitarios para trabalhar com caminhos de arquivos e diretorios
 const path = require('path');
-// Sequelize é um ORM para Node.js, que tem suporte vários bancos de dados
-// ORM mapeamento objeto-relacional, as tabelas do banco de dados sao 
-// representadas em classes e os registros das tabelas seriam instancias dessas classes
 const Sequelize = require('sequelize');
-// Permite obter informacoes do processo na pagina atual
-const process = require('process');
-// Permite obter parte do caminho para o arquivo
 const basename = path.basename(__filename);
-// Verificar se deve utilizar a variavel global ou 'development'
-const env = process.env.NODE_ENV || 'development';
-// Incluir o arquivo
+const env = process.env.NODE_ENV || 'development'; // Usa o NODE_ENV ou 'development' como padrão
 const config = require(path.join(__dirname, '../db/config/database.js'))[env];
-// Criar a constate com objeto vazio
 const db = {};
 
-// Criar a variavel que recebe a conexao com banco de dados
-let sequelize;
-// Verifica qual configuracao de banco de dados voce deseja usar
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  // Usar as configuracoes do arquivo "config/database.js"
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+// Configuração do Sequelize
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: process.env.NODE_ENV === 'production' ? { require: true, rejectUnauthorized: false } : false, // Desativa SSL em desenvolvimento
+  },
+});
 
-// Verificar a conexao com banco de dados
-try {
-  console.log("Conexão com o banco de dados realizado com sucesso!");
-} catch (error) {
-  console.log('Erro: Conexão com o banco de dados não realizado com sucesso!', error);
-}
+// Teste de conexão com o banco de dados
+sequelize.authenticate()
+  .then(() => console.log('🔥 Conectado ao PostgreSQL no Railway!'))
+  .catch(err => console.error('❌ Erro ao conectar ao banco:', err));
 
-// Identificar o MODEL
+// Carregar os models
+const modelsPath = __dirname;
+
 fs
-  .readdirSync(__dirname)
+  .readdirSync(modelsPath)
   .filter(file => {
     return (
       file.indexOf('.') !== 0 &&
@@ -50,10 +42,11 @@ fs
     );
   })
   .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    const model = require(path.join(modelsPath, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });
 
+// Configurar associações entre os models
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);

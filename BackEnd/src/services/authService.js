@@ -1,6 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const usuarioJogador = require("../models/jogador");
+const usuarioJogador = require("../models/Jogador");
+require('dotenv').config({
+    path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
+  });
+
 
 const generateToken = (usuario) => jwt.sign({ id: usuario.idJogador }, process.env.JWT_SECRET, {
   expiresIn: '90d',

@@ -1,31 +1,22 @@
-// Incluir o arquivo com as variaveis de ambiente
-require('dotenv').config();
-
-// Incluir o arquivo com as variaveis de ambiente
-const dotenv = require('dotenv');
-
+// Incluir o arquivo com as variáveis de ambiente
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'development' ? '.env.local' : '.env',
+});
 
 // Exportar as credenciais do banco de dados
 module.exports = { 
-  "development": {
-    "username": process.env.DB_USER,
-    "password": process.env.DB_PASS,
-    "database": process.env.DB_BASE,
-    "host": process.env.DB_HOST,
-    "dialect": process.env.DB_DIALECT
+  development: {
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_BASE,
+    host: process.env.DB_HOST,
+    dialect: (process.env.DB_DIALECT || 'postgres').trim(), // Garantir que o dialeto seja definido
   },
-  "test": {
-    "username": process.env.DB_USER,
-    "password": process.env.DB_PASSWO,
-    "database": process.env.DB_BASE,
-    "host": process.env.DB_HOST,
-    "dialect": process.env.DB_DIALECT
-  },
-  "production": {
-    "username": process.env.DB_USER,
-    "password": process.env.DB_PASS,
-    "database": process.env.DB_BASE,
-    "host": process.env.DB_HOST,
-    "dialect": process.env.DB_DIALECT
+  production: {
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_BASE,
+    host: process.env.DB_HOST,
+    dialect: (process.env.DB_DIALECT || 'postgres').trim(), // Garantir que o dialeto seja definido
   }
-}
+};

@@ -1,6 +1,5 @@
 # Node.js
 node_modules/
-.env
 package-lock.json
 
 # Build
@@ -21,3 +20,5 @@ Thumbs.db
 
 # Outros
 *.cache
+
+.env

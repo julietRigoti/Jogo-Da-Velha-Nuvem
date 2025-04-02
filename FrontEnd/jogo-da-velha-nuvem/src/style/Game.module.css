@@ -1,35 +1,92 @@
 /* Game.module.css */
 .gameContainer {
-    padding: 20px;
-    background-color: #f0f0f0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #112736;
+  color: #efdebb;
+  gap: 30px;
 }
 
-.connectingMessage {
-    font-size: 20px;
-    color: #ff4500;
-    margin: 10px 0;
+.board {
+  display: grid;
+  width: min-content;
+  grid-template-columns: repeat(3, 150px);
+  grid-template-rows: repeat(3, 150px);
 }
 
-.gameContent {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+.cell {
+  border: 5px solid #efdebb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3em;
+  color: #efdebb;
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
 }
 
-.listContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 40%;
-    padding: 10px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.cell:hover {
+  cursor: pointer; /* Mostra que a célula é interativa */
+}
+
+/* Remove as bordas externas */
+.cell:nth-child(-n + 3) {
+  border-top: none;
+}
+.cell:nth-child(3n) {
+  border-right: none;
+}
+.cell:nth-child(3n + 1) {
+  border-left: none;
+}
+.cell:nth-child(n + 7) {
+  border-bottom: none;
+}
+
+/* Painel de informações */
+.infoPainel {
+  display: flex;
+  background: #e9881e;
+  color: #112736;
+  padding: 15px;
+  border-radius: 10px;
+  width: 420px;
+  height: 400px;
+  flex-direction: column;
+  align-items: left;
+  text-align: left;
+  gap: 10px;
+}
+
+.infoPainel p {
+  margin: 5px 0; /* Reduzi o espaço entre os textos */
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px; /* Adicionei um espaço acima do botão */
+}
+.restartButton {
+  width: 65%;
+  background-color: #112736;
+  color: #f8bc63;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.restartButton:hover {
+  background-color: #c3332d;
+  color: #f8bc63;
+}
+
+.h2 {
+  font-size: 1.2em;
+  text-align: center;
+  margin-bottom: 10px;
 }

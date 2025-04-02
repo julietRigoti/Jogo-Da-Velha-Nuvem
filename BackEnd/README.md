@@ -24,7 +24,7 @@ Instalar a dependencia como desenvolvedor para reiniciar o servidor sempre que h
 ### npm install --save-dev nodemon
 
 Abrir o endereco no navegador para acessar a pagina inicial
-### http://localhost:8080
+### http://localhost:8081
 
 Sequelize é uma biblioteca Javascript que facilita o gerenciamento do banco de dados SQL 
  ### npm install --save sequelize

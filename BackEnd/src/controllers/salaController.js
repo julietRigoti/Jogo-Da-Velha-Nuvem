@@ -1,6 +1,6 @@
 const db = require('../models');
 
-exports.createRoom = async (req, res) => {
+exports.criarSala = async (req, res) => {
   try {
     const { idJogador1 } = req.body;
     const newRoom = await db.Sala.create({
@@ -15,7 +15,7 @@ exports.createRoom = async (req, res) => {
   }
 };
 
-exports.joinRoom = async (req, res) => {
+exports.entrarSala = async (req, res) => {
   const { idSala } = req.params;
   const { idJogador } = req.body;
 
