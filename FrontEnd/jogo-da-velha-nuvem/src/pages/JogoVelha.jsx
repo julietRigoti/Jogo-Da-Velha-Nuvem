@@ -4,177 +4,147 @@ import { GameContext } from "../contexts/GameContext";
 import stylesGame from "../style/Game.module.css";
 import stylesHome from "../style/Home.module.css";
 
-const JogoDaVelha = () => {
-  const { state } = useContext(GameContext);
-  const { socket, isConnected } = state;
+const JogoVelha = () => {
   const { idSala } = useParams();
+  const { state } = useContext(GameContext);
+  const { socket, isConnected, player } = state;
 
-  // Estado do jogo
+  const [sala, setSala] = useState(null);
   const [gameState, setGameState] = useState({
     board: Array(9).fill(null),
     winner: null,
     scores: { X: 0, O: 0 },
-    currentPlayer: "X", // Padrão para iniciar com X
+    currentPlayer: "X",
   });
-
-  // Informações do jogador
-  const [playerInfo, setPlayerInfo] = useState({
-    idJogador: "",
-    nicknameJogador: "",
-    simbolo: "",
-  });
-
+  const [playerInfo, setPlayerInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Função auxiliar para determinar o jogador da vez com base no estado da sala
+  // 🔄 Define de quem é a vez
   const getCurrentPlayer = (sala) => {
-    // Verifica se o jogador1 ou jogador2 possuem a propriedade currentPlayer com valor booleano true.
-    if (sala.jogador1 && sala.jogador1.currentPlayer === true) {
-      return "X";
-    }
-    if (sala.jogador2 && sala.jogador2.currentPlayer === true) {
-      return "O";
-    }
-    // Se não estiver definido, retorna null (ou pode definir um padrão)
-    return null;
+    return sala?.currentPlayer || "X";
   };
 
+  // 🔁 Recupera sala ao montar componente
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    // Recupera os dados da sala
-    socket.emit("recuperarSala", { idSala }, (response) => {
-      if (response.sucesso) {
-        console.log("🔹 Sala recuperada:", response.sala);
-
-        setGameState((prevState) => ({
-          ...prevState,
-          board: response.sala.tabuleiro,
-          winner: response.sala.winner || null,
-          scores: response.sala.scores || { X: 0, O: 0 },
-          currentPlayer: getCurrentPlayer(response.sala) || "X",
-        }));
-
-        if (state.player?.idJogador) {
-          const isJogador1 =
-            response.sala.jogador1?.idJogador === state.player.idJogador;
-          setPlayerInfo({
-            idJogador: state.player.idJogador,
-            nicknameJogador: isJogador1
-              ? response.sala.jogador1?.nicknameJogador
-              : response.sala.jogador2?.nicknameJogador || "Desconhecido",
-            simbolo: isJogador1 ? "X" : "O",
-          });
-        }
-
-        setIsLoading(false);
-      } else {
-        console.error("❌ Erro ao recuperar sala:", response.mensagem);
-        setError(response.mensagem || "Erro ao carregar a sala.");
-        setIsLoading(false);
-      }
-    });
-
-    // Listener para atualizações da sala
-    const atualizarSalaListener = (salaAtualizada) => {
-      console.log("🔄 Atualizando sala com novos dados:", salaAtualizada);
-      setGameState((prevState) => ({
-        ...prevState,
+    const handleAtualizarSala = (salaAtualizada) => {
+      console.log("🧠 RECEBIDO do SOCKET -> atualizarSala:", salaAtualizada);
+      setSala(salaAtualizada);
+      setGameState({
         board: salaAtualizada.tabuleiro,
         winner: salaAtualizada.winner || null,
         scores: salaAtualizada.scores || { X: 0, O: 0 },
-        currentPlayer: getCurrentPlayer(salaAtualizada) || "X",
-      }));
+        currentPlayer: getCurrentPlayer(salaAtualizada),
+      });
     };
 
-    
-    socket.on("atualizarSala", atualizarSalaListener);
+    console.log("🟢 Registrando listener de atualizarSala...");
+    socket.on("atualizarSala", handleAtualizarSala);
+
+    socket.emit("recuperarSala", { idSala }, (response) => {
+      if (response.sucesso) {
+        console.log("🔹 Sala recuperada:", response.sala);
+        handleAtualizarSala(response.sala);
+        setIsLoading(false);
+      } else {
+        setError("Erro ao carregar a sala.");
+        setIsLoading(false);
+      }
+    });
+
 
     return () => {
-      socket.off("atualizarSala", atualizarSalaListener);
+      socket.off("atualizarSala", handleAtualizarSala);
     };
-  }, [socket, isConnected, idSala, state.player?.idJogador]);
+  }, [socket, isConnected, idSala]);
 
+  // ✅ Define o símbolo do jogador assim que `player` e `sala` estiverem disponíveis
+  useEffect(() => {
+    if (!player?.idJogador || !sala) return;
+
+    const isJogador1 = sala.jogador1?.idJogador === parseInt(player.idJogador);
+    setPlayerInfo({
+      idJogador: player.idJogador,
+      nicknameJogador: isJogador1
+        ? sala.jogador1.nicknameJogador
+        : sala.jogador2?.nicknameJogador || "Desconhecido",
+      simbolo: isJogador1 ? "X" : "O",
+    });
+  }, [player?.idJogador, sala]);
+
+  // 🔍 Validação de jogada
   const canMakeMove = (index) => {
-    if (!socket) {
-      setError("Socket não está disponível.");
-      return false;
-    }
-    if (!isConnected) {
-      setError("Conexão com o servidor ainda não foi estabelecida.");
-      return false;
-    }
-    if (!playerInfo.simbolo) {
-      setError("Seu símbolo ainda não foi carregado.");
-      return false;
-    }
-    if (gameState.board[index] !== null) {
-      setError("Jogada inválida! Célula já preenchida.");
-      return false;
-    }
-    if (gameState.currentPlayer !== playerInfo.simbolo) {
-      setError("Não é a sua vez de jogar.");
-      return false;
-    }
+    console.log("VALIDANDO JOGADA:");
+    console.log("Simbolo:", playerInfo?.simbolo);
+    console.log("Jogador:", playerInfo?.idJogador);
+    console.log("Current Player:", gameState.currentPlayer);
+    console.log("Tabuleiro:", gameState.board);
+
+    if (!socket || !isConnected) return false;
+    if (!playerInfo?.simbolo) return false;
+    if (gameState.board[index] !== null) return false;
+    if (gameState.currentPlayer !== playerInfo.simbolo) return false;
     return true;
   };
 
+  // 🔄 Envia jogada
   const handleCellClick = (index) => {
+    console.log("🧩 Dados para validar turno:");
+    console.log("Simbolo recebido:", simbolo);
+    console.log("Turno atual da sala:", sala.currentPlayer);
+    console.log("Jogador 1:", sala.jogador1);
+    console.log("Jogador 2:", sala.jogador2);
     if (!canMakeMove(index)) return;
 
-    socket.emit(
-      "fazerJogada",
-      { idSala, index, simbolo: playerInfo.simbolo },
-      (response) => {
-        if (response.sucesso) {
-          setGameState((prevState) => ({
-            ...prevState,
-            board: response.sala.tabuleiro,
-            winner: response.sala.winner || null,
-            scores: response.sala.scores || { X: 0, O: 0 },
-            currentPlayer: getCurrentPlayer(response.sala) || "X",
-          }));
-        } else {
-          setError(response.mensagem || "Erro ao fazer jogada.");
-        }
-      }
-    );
-  };
-
-  // ==============================
-  // 🔹 Reiniciar Jogo
-  // ==============================
-  const handleRestart = () => {
-    if (!socket) return;
-
-    socket.emit("reiniciarJogo", { idSala }, (response) => {
-      if (response.sucesso) {
-        setGameState({
-          board: Array(9).fill(null),
-          winner: null,
-          scores: { X: 0, O: 0 },
-          currentPlayer: "X", // Reinicia para X
-        });
-      } else {
-        setError(response.mensagem || "Erro ao iniciar o jogo.");
+    socket.emit("fazerJogada", {
+      idSala,
+      index,
+      simbolo: playerInfo.simbolo,
+    }, (response) => {
+      if (!response.sucesso) {
+        setError(response.mensagem || "Erro ao fazer jogada.");
       }
     });
   };
-  // ==============================
-  // 🔹 Renderização do tabuleiro e informações
-  // ==============================
+
+  // 🔁 Reiniciar jogo
+  const handleRestart = () => {
+    if (!socket) return;
+    socket.emit("reiniciarJogo", { idSala }, (response) => {
+      if (!response.sucesso) {
+        setError(response.mensagem || "Erro ao reiniciar jogo.");
+      }
+    });
+  };
+
+  // 🧭 Espera carregamento
+  if (
+    isLoading ||
+    !playerInfo?.idJogador ||
+    !playerInfo?.simbolo ||
+    !sala ||
+    !socket ||
+    !isConnected
+  ) {
+    return <p className={stylesHome.h1}>Carregando jogo...</p>;
+  }
+
+  // 🧩 Render principal
   return (
     <div className={stylesHome.principalDiv}>
       <div className={stylesGame.gameContainer}>
+        {/* Tabuleiro */}
         <div className={stylesGame.board}>
           {gameState.board.map((symbol, index) => (
             <div
               key={index}
               className={`${stylesGame.cell} ${symbol ? stylesGame[symbol] : ""}`}
-              onClick={() => handleCellClick(index)}
-              style={{
-                cursor: playerInfo.simbolo && symbol === null ? "pointer" : "not-allowed",
+              onClick={() => {
+                if (playerInfo && sala && gameState.currentPlayer && socket && isConnected) {
+                  handleCellClick(index);
+                }
               }}
               role="button"
               aria-label={`Célula ${index + 1}, ${symbol || "vazia"}`}
@@ -184,24 +154,28 @@ const JogoDaVelha = () => {
           ))}
         </div>
 
+        {/* Painel lateral */}
         <div className={stylesGame.infoPainel}>
           <h2>Jogo da Velha</h2>
           <p>Você é: {playerInfo.simbolo}</p>
+
           {gameState.winner ? (
             <div className={stylesGame.winnerMessage}>
               <h2>Vencedor: {gameState.winner}</h2>
-              <button onClick={handleRestart}>Reiniciar Jogo</button>
+              <button onClick={handleRestart}>Reiniciar</button>
             </div>
           ) : gameState.board.every((cell) => cell !== null) ? (
-            <p>Empate! O tabuleiro está cheio.</p>
+            <p>Empate! Tabuleiro cheio.</p>
           ) : (
-            <p>Próximo jogador: {gameState.currentPlayer}</p>
+            <p>Vez de: {gameState.currentPlayer}</p>
           )}
+
           <button onClick={handleRestart}>Reiniciar Jogo</button>
+
+          {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
       </div>
     </div>
   );
 };
-
-export default JogoDaVelha;
+export default JogoVelha;

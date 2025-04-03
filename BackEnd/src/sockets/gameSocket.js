@@ -132,6 +132,8 @@ module.exports = (io) => {
         }
     
         if (sala.currentPlayer !== simbolo) {
+          console.warn("🚫 Jogador tentou jogar fora da vez:");
+          console.warn(`Simbolo: ${simbolo}, CurrentPlayer: ${sala.currentPlayer}`);
           return callback?.({
             sucesso: false,
             mensagem: "Não é sua vez.",

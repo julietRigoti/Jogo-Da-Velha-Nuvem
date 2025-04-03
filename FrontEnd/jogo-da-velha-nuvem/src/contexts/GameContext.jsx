@@ -1,15 +1,21 @@
-// GameProvider.jsx (ou GameContext.js)
-import React, { useReducer, useEffect, createContext, useState, } from "react";
+import React, {
+  useReducer,
+  useEffect,
+  createContext,
+  useState,
+} from "react";
 import socketClient from "socket.io-client";
 
+// 🔧 Carrega a URL do backend do .env
 const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
 if (!backendUrl) {
   throw new Error(
-    "Backend URL não está configurado. Verifique o arquivo .env.production e certifique-se de que a variável VITE_REACT_APP_BACKEND_URL_NUVEM está definida."
+    "Backend URL não está configurado. Verifique o .env e a variável VITE_REACT_APP_BACKEND_URL."
   );
 }
 
+// 🔌 Configuração inicial do socket
 const socket = socketClient(backendUrl, {
   autoConnect: false,
   transports: ["websocket", "polling"],
@@ -18,6 +24,7 @@ const socket = socketClient(backendUrl, {
   reconnectionDelay: 1000,
 });
 
+// 🎮 Ações para o reducer
 const ACTIONS = {
   CONNECTED: "CONNECTED",
   SET_PLAYER: "SET_PLAYER",
@@ -27,6 +34,26 @@ const ACTIONS = {
   SIMBOLO: "SIMBOLO",
 };
 
+// 📦 Estado inicial do contexto
+const storedToken = sessionStorage.getItem("token");
+const storedId = sessionStorage.getItem("idJogador");
+const storedNickname = sessionStorage.getItem("nicknameJogador");
+
+const initialState = {
+  player:
+    storedToken && storedId && storedNickname
+      ? {
+          token: storedToken,
+          idJogador: parseInt(storedId),
+          nicknameJogador: storedNickname,
+        }
+      : null,
+  rooms: [],
+  isConnected: false,
+  socket: null,
+};
+
+// 🎯 Reducer central para controle do estado global
 const reducer = (state, action) => {
   switch (action.type) {
     case ACTIONS.CONNECTED:
@@ -53,52 +80,57 @@ const reducer = (state, action) => {
   }
 };
 
+// 🌐 Criação do contexto
 const GameContext = createContext();
 
 const GameProvider = ({ children, navigate }) => {
-  const initialState = {
-    player: {
-      idJogador: sessionStorage.getItem("idJogador") || null,
-      nicknameJogador: sessionStorage.getItem("nicknameJogador") || null,
-      token: sessionStorage.getItem("token") || null,
-    },
-    rooms: [],
-    isConnected: false,
-    socket: null,
-  };
-
   const [state, dispatch] = useReducer(reducer, initialState);
   const [error, setError] = useState("");
 
+  // 🔁 Rehidratação após refresh: garante player no contexto
   useEffect(() => {
-    const storedToken = sessionStorage.getItem("token");
-    if (!storedToken) {
-      if (window.location.pathname !== "/") {
-        setTimeout(() => navigate("/"), 100);
-      }
+    if (!state.player && storedToken && storedId && storedNickname) {
+      dispatch({
+        type: ACTIONS.SET_PLAYER,
+        payload: {
+          token: storedToken,
+          idJogador: parseInt(storedId),
+          nicknameJogador: storedNickname,
+        },
+      });
+    }
+  }, []);
+
+  // 🔐 Redireciona para home se não estiver autenticado
+  useEffect(() => {
+    if (!storedToken && window.location.pathname !== "/") {
+      setTimeout(() => navigate("/"), 100);
     }
   }, [navigate]);
 
+  // 🔌 Conecta o socket quando o token estiver pronto
   useEffect(() => {
-    if (state.player.token && !socket.connected) {
+    if (state.player?.token && !socket.connected) {
       socket.auth = { token: state.player.token };
       socket.connect();
       dispatch({ type: ACTIONS.SET_SOCKET, payload: socket });
     }
-  }, [state.player.token]);
+  }, [state.player?.token]);
 
+  // 📡 Listeners de conexão do socket
   useEffect(() => {
     socket.on("connect", () => {
-      console.log("Socket conectado com sucesso:", socket.id);
+      console.log("✅ Socket conectado com sucesso:", socket.id);
       dispatch({ type: ACTIONS.CONNECTED, payload: true });
     });
 
     socket.on("disconnect", () => {
+      console.log("🔌 Socket desconectado.");
       dispatch({ type: ACTIONS.CONNECTED, payload: false });
     });
 
     socket.on("connect_error", (err) => {
-      console.error("Erro de conexão do socket:", err.message);
+      console.error("❌ Erro de conexão do socket:", err.message);
       setError("Erro ao conectar ao servidor. Tente novamente mais tarde.");
       dispatch({ type: ACTIONS.CONNECTED, payload: false });
     });
@@ -106,12 +138,13 @@ const GameProvider = ({ children, navigate }) => {
     return () => {
       socket.offAny();
       if (socket.connected) {
-        console.log("Desconectando socket:", socket.id);
+        console.log("⛔ Desconectando socket:", socket.id);
         socket.disconnect();
       }
     };
   }, []);
 
+  // 🧠 Exporta contexto e ações
   return (
     <GameContext.Provider value={{ state, dispatch, error }}>
       {children}

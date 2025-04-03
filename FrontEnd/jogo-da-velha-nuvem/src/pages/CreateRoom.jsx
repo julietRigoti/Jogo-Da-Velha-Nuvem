@@ -43,13 +43,15 @@ const CreateRoom = () => {
       return;
     }
     setIsProcessing(true);
+
+    console.log("Criando sala com o jogador:", player);
+
     socket.emit(
       "criarSala",
       {
         jogador: {
           idJogador: player.idJogador,
           nicknameJogador: player.nicknameJogador,
-          simbolo: "X",
         },
       },
       (response) => {
