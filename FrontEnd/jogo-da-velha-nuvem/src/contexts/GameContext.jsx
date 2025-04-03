@@ -120,12 +120,10 @@ const GameProvider = ({ children, navigate }) => {
   // 📡 Listeners de conexão do socket
   useEffect(() => {
     socket.on("connect", () => {
-      console.log("✅ Socket conectado com sucesso:", socket.id);
       dispatch({ type: ACTIONS.CONNECTED, payload: true });
     });
 
     socket.on("disconnect", () => {
-      console.log("🔌 Socket desconectado.");
       dispatch({ type: ACTIONS.CONNECTED, payload: false });
     });
 
@@ -138,7 +136,6 @@ const GameProvider = ({ children, navigate }) => {
     return () => {
       socket.offAny();
       if (socket.connected) {
-        console.log("⛔ Desconectando socket:", socket.id);
         socket.disconnect();
       }
     };

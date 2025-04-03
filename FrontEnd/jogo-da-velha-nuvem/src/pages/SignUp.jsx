@@ -54,8 +54,6 @@ const SignUp = () => {
     try {
       setIsLoading(true);
       const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-
-      console.log("URL do backend:", backendUrl); // Para depuração
       if (!backendUrl) {
         throw new Error("Backend URL não está configurado corretamente.");
       }
@@ -71,8 +69,6 @@ const SignUp = () => {
       });
 
       const data = await response.json();
-
-      console.log("Resposta do servidor:", data); // Para depuração
       if (!response.ok) {
         const errorMessage = data.message || "Erro no servidor";
         throw new Error(errorMessage);

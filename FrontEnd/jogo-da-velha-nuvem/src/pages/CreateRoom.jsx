@@ -23,13 +23,11 @@ const CreateRoom = () => {
 
     socket.emit("pegarSalas", (salasAtivas) => {
       if (Array.isArray(salasAtivas)) {
-        console.log("Salas recebidas do servidor:", salasAtivas);
         dispatch({ type: "ROOMS", payload: salasAtivas });
       }
     });
 
     const handleRoomsRefresh = (salasAtivas) => {
-      console.log("Atualização de salas recebida:", salasAtivas);
       dispatch({ type: "ROOMS", payload: salasAtivas });
     };
 
@@ -46,8 +44,6 @@ const CreateRoom = () => {
       return;
     }
     setIsProcessing(true);
-
-    console.log("Criando sala com o jogador:", player);
 
     socket.emit(
       "criarSala",

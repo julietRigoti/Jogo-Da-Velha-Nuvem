@@ -1,6 +1,5 @@
 const express = require("express");
 const { criarSala} = require("../controllers/salaController");
-const cors = require("cors");
 
 const router = express.Router();
 

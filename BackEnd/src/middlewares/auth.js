@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 
 const autenticarJWT = (socket, next) => {
-  console.debug("🔍 Autenticando jogador...");
 
   try {
     const token = socket.handshake.auth?.token;

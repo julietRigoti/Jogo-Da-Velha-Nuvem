@@ -22,7 +22,6 @@ const Login = () => {
 
   const login = async () => {
     const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL;
-    console.log("URL do backend:", backendUrl); // Para depuração
     if (!backendUrl) {
       throw new Error("Backend URL não está configurado corretamente.");
     }

@@ -4,7 +4,6 @@ const Redis = require("ioredis");
 
 const redis = new Redis(process.env.REDIS_URL);
 
-// ========== 🔌 Logs de Conexão Redis ==========
 redis.on("connect", () => console.log("✅ Conectado ao Redis com sucesso."));
 redis.on("error", (err) =>
   console.error("❌ Erro na conexão com o Redis:", err)
@@ -35,7 +34,6 @@ module.exports = (io) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("🔑 Usuário autenticado:", decoded);
       socket.user = decoded;
       next();
     } catch (err) {
@@ -46,7 +44,6 @@ module.exports = (io) => {
 
   // ========== 📡 Conexão do jogador ==========
   io.on("connection", async (socket) => {
-    console.log(`🎮 Jogador conectado: ${socket.id}`);
 
     const jogador = {
       idJogador: socket.user.idJogador,
@@ -138,7 +135,6 @@ module.exports = (io) => {
 
     // ========== 🎯 Fazer Jogada ==========
     socket.on("fazerJogada", async ({ idSala, index, simbolo }, callback) => {
-      console.log("📥 Backend recebeu jogada!", { idSala, index, simbolo });
       try {
         const salaJSON = await redis.get(`sala:${idSala}`);
         if (!salaJSON)
@@ -155,12 +151,6 @@ module.exports = (io) => {
             mensagem: "O jogo já foi finalizado.",
           });
         }
-
-        console.log("🧩 Dados para validar turno:");
-        console.log("Simbolo recebido:", simbolo);
-        console.log("Turno atual da sala:", sala.currentPlayer);
-        console.log("Jogador 1:", sala.jogador1);
-        console.log("Jogador 2:", sala.jogador2);
 
         if (sala.currentPlayer !== simbolo) {
           console.warn("🚫 Jogador tentou jogar fora da vez:");
@@ -197,7 +187,7 @@ module.exports = (io) => {
               pontuacaoJogador1: sala.scores.X,
               pontuacaoJogador2: sala.scores.O,
             });
-            console.log("💾 Histórico salvo com sucesso.");
+  
           } catch (err) {
             console.error("Erro ao salvar histórico:", err);
           }
@@ -319,7 +309,6 @@ module.exports = (io) => {
 
     // ========== ❌ Desconexão ==========
     socket.on("disconnect", async () => {
-      console.log(`🔴 Jogador desconectado: ${socket.id}`);
       const conexoes = activeConnections.get(jogador.idJogador);
       if (conexoes) {
         conexoes.delete(socket.id);

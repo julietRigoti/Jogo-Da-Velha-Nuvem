@@ -27,7 +27,6 @@ const JogoVelha = () => {
   const getCurrentPlayer = (sala) => sala?.currentPlayer || "X";
 
   const handleAtualizarSala = (salaAtualizada) => {
-    console.log("🧠 RECEBIDO do SOCKET -> atualizarSala:", salaAtualizada);
     setSala(salaAtualizada);
     setGameState({
       board: salaAtualizada.tabuleiro,
@@ -41,12 +40,10 @@ const JogoVelha = () => {
   useEffect(() => {
     if (!socket || !isConnected || !idSala) return;
 
-    console.log("🟢 Registrando listener de atualizarSala...");
     socket.on("atualizarSala", handleAtualizarSala);
 
     socket.emit("recuperarSala", { idSala }, (response) => {
       if (response.sucesso) {
-        console.log("🔹 Sala recuperada:", response.sala);
         handleAtualizarSala(response.sala);
         setIsLoading(false);
       } else {
@@ -56,7 +53,6 @@ const JogoVelha = () => {
     });
 
     return () => {
-      console.log("❌ Limpando listener atualizarSala");
       socket.off("atualizarSala", handleAtualizarSala);
     };
   }, [socket, isConnected, idSala]);
@@ -77,11 +73,6 @@ const JogoVelha = () => {
   }, [player?.idJogador, sala?.idSala]);
 
   const canMakeMove = (index) => {
-    console.log("VALIDANDO JOGADA:");
-    console.log("Simbolo:", playerInfo?.simbolo);
-    console.log("Jogador:", playerInfo?.idJogador);
-    console.log("Current Player:", gameState.currentPlayer);
-    console.log("Tabuleiro:", gameState.board);
 
     if (!socket || !isConnected) return false;
     if (!playerInfo?.simbolo) return false;
@@ -91,10 +82,6 @@ const JogoVelha = () => {
   };
 
   const handleCellClick = (index) => {
-    console.log("Tentando clicar na célula:", index);
-    console.log("Simbolo do jogador:", playerInfo?.simbolo);
-    console.log("Player atual do jogo:", gameState.currentPlayer);
-    console.log("Tabuleiro atual:", gameState.board);
 
     if (!canMakeMove(index)) return;
 
@@ -106,13 +93,8 @@ const JogoVelha = () => {
           setError(response.mensagem || "Erro ao fazer jogada.");
           return;
         }
-        console.log("Jogada feita com sucesso:", response);
         handleAtualizarSala(response.sala);
-        console.log("Estado do jogo atualizado:", {
-          board: response.sala.tabuleiro,
-          currentPlayer: getCurrentPlayer(response.sala),
-          winner: response.sala.winner || null,
-        });
+        
       }
     );
   };
@@ -131,7 +113,6 @@ const JogoVelha = () => {
   
     socket.emit("sairSala", { idSala }, (response) => {
       if (response.sucesso) {
-        console.log("🚪 Saiu da sala com sucesso!");
         navigate("/criar-sala"); // ou use `navigate("/sala")` se estiver usando `useNavigate()`
       } else {
         setError(response.mensagem || "Erro ao sair da sala.");
