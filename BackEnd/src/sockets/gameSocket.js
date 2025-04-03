@@ -129,11 +129,6 @@ module.exports = (io) => {
 
     // ========== 🎯 Fazer Jogada ==========
     socket.on("fazerJogada", async ({ idSala, index, simbolo }, callback) => {
-      console.log("🧩 Dados para validar turno:");
-      console.log("Simbolo recebido:", simbolo);
-      console.log("Turno atual da sala:", sala.currentPlayer);
-      console.log("Jogador 1:", sala.jogador1);
-      console.log("Jogador 2:", sala.jogador2);
       console.log("📥 Backend recebeu jogada!", { idSala, index, simbolo });
       try {
         const salaJSON = await redis.get(`sala:${idSala}`);
@@ -151,6 +146,12 @@ module.exports = (io) => {
             mensagem: "O jogo já foi finalizado.",
           });
         }
+
+        console.log("🧩 Dados para validar turno:");
+        console.log("Simbolo recebido:", simbolo);
+        console.log("Turno atual da sala:", sala.currentPlayer);
+        console.log("Jogador 1:", sala.jogador1);
+        console.log("Jogador 2:", sala.jogador2);
 
         if (sala.currentPlayer !== simbolo) {
           console.warn("🚫 Jogador tentou jogar fora da vez:");
