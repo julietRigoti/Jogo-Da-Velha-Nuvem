@@ -4,11 +4,6 @@ const cors = require("cors");
 
 const router = express.Router();
 
-// Configuração de CORS específica para essas rotas
-const corsOptions = {
-  origin: "https://jogo-da-velha-nuvem.vercel.app",
-};
-
 // Rota para criar uma sala
 router.post("/criar-sala", cors(corsOptions), criarSala);
 
