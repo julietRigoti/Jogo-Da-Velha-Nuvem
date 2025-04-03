@@ -20,29 +20,27 @@ const JogoVelha = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🔄 Define de quem é a vez
-  const getCurrentPlayer = (sala) => {
-    return sala?.currentPlayer || "X";
+  // Define de quem é a vez
+  const getCurrentPlayer = (sala) => sala?.currentPlayer || "X";
+
+  const handleAtualizarSala = (salaAtualizada) => {
+    console.log("🧠 RECEBIDO do SOCKET -> atualizarSala:", salaAtualizada);
+    setSala(salaAtualizada);
+    setGameState({
+      board: salaAtualizada.tabuleiro,
+      winner: salaAtualizada.winner || null,
+      scores: salaAtualizada.scores || { X: 0, O: 0 },
+      currentPlayer: salaAtualizada.currentPlayer || "X",
+    });
   };
 
-  // 🔁 Recupera sala ao montar componente
+  // Recupera sala e registra o listener
   useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const handleAtualizarSala = (salaAtualizada) => {
-      console.log("🧠 RECEBIDO do SOCKET -> atualizarSala:", salaAtualizada);
-      setSala(salaAtualizada);
-      setGameState({
-        board: salaAtualizada.tabuleiro,
-        winner: salaAtualizada.winner || null,
-        scores: salaAtualizada.scores || { X: 0, O: 0 },
-        currentPlayer: getCurrentPlayer(salaAtualizada),
-      });
-    };
-
+    if (!socket || !isConnected || !idSala) return;
+  
     console.log("🟢 Registrando listener de atualizarSala...");
     socket.on("atualizarSala", handleAtualizarSala);
-
+  
     socket.emit("recuperarSala", { idSala }, (response) => {
       if (response.sucesso) {
         console.log("🔹 Sala recuperada:", response.sala);
@@ -53,14 +51,15 @@ const JogoVelha = () => {
         setIsLoading(false);
       }
     });
-
-
+  
     return () => {
+      console.log("❌ Limpando listener atualizarSala");
       socket.off("atualizarSala", handleAtualizarSala);
     };
   }, [socket, isConnected, idSala]);
+  
 
-  // ✅ Define o símbolo do jogador assim que `player` e `sala` estiverem disponíveis
+  // Define símbolo do jogador
   useEffect(() => {
     if (!player?.idJogador || !sala) return;
 
@@ -72,9 +71,8 @@ const JogoVelha = () => {
         : sala.jogador2?.nicknameJogador || "Desconhecido",
       simbolo: isJogador1 ? "X" : "O",
     });
-  }, [player?.idJogador, sala]);
+  }, [player?.idJogador, sala?.idSala]);
 
-  // 🔍 Validação de jogada
   const canMakeMove = (index) => {
     console.log("VALIDANDO JOGADA:");
     console.log("Simbolo:", playerInfo?.simbolo);
@@ -89,22 +87,33 @@ const JogoVelha = () => {
     return true;
   };
 
-  // 🔄 Envia jogada
   const handleCellClick = (index) => {
+    console.log("Tentando clicar na célula:", index);
+    console.log("Simbolo do jogador:", playerInfo?.simbolo);
+    console.log("Player atual do jogo:", gameState.currentPlayer);
+    console.log("Tabuleiro atual:", gameState.board);
+
     if (!canMakeMove(index)) return;
 
-    socket.emit("fazerJogada", {
-      idSala,
-      index,
-      simbolo: playerInfo.simbolo,
-    }, (response) => {
-      if (!response.sucesso) {
-        setError(response.mensagem || "Erro ao fazer jogada.");
+    socket.emit(
+      "fazerJogada",
+      { idSala, index, simbolo: playerInfo.simbolo },
+      (response) => {
+        if (!response.sucesso) {
+          setError(response.mensagem || "Erro ao fazer jogada.");
+          return;
+        }
+        console.log("Jogada feita com sucesso:", response);
+        handleAtualizarSala(response.sala);
+        console.log("Estado do jogo atualizado:", {
+          board: response.sala.tabuleiro,
+          currentPlayer: getCurrentPlayer(response.sala),
+          winner: response.sala.winner || null,
+        });
       }
-    });
+    );
   };
 
-  // 🔁 Reiniciar jogo
   const handleRestart = () => {
     if (!socket) return;
     socket.emit("reiniciarJogo", { idSala }, (response) => {
@@ -114,19 +123,10 @@ const JogoVelha = () => {
     });
   };
 
-  // 🧭 Espera carregamento
-  if (
-    isLoading ||
-    !playerInfo?.idJogador ||
-    !playerInfo?.simbolo ||
-    !sala ||
-    !socket ||
-    !isConnected
-  ) {
+  if (isLoading || !playerInfo) {
     return <p className={stylesHome.h1}>Carregando jogo...</p>;
   }
 
-  // 🧩 Render principal
   return (
     <div className={stylesHome.principalDiv}>
       <div className={stylesGame.gameContainer}>
@@ -136,10 +136,12 @@ const JogoVelha = () => {
             <div
               key={index}
               className={`${stylesGame.cell} ${symbol ? stylesGame[symbol] : ""}`}
-              onClick={() => {
-                if (playerInfo && sala && gameState.currentPlayer && socket && isConnected) {
-                  handleCellClick(index);
-                }
+              onClick={() => handleCellClick(index)}
+              style={{
+                cursor:
+                  playerInfo.simbolo && symbol === null
+                    ? "pointer"
+                    : "not-allowed",
               }}
               role="button"
               aria-label={`Célula ${index + 1}, ${symbol || "vazia"}`}
@@ -173,4 +175,5 @@ const JogoVelha = () => {
     </div>
   );
 };
+
 export default JogoVelha;
