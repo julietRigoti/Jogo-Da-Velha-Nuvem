@@ -259,17 +259,25 @@ module.exports = (io) => {
             sucesso: false,
             mensagem: "Sala não encontrada.",
           });
-
+    
         const sala = JSON.parse(salaJSON);
-        if (sala.jogador1?.idJogador === jogador.idJogador)
-          sala.jogador1 = null;
-        if (sala.jogador2?.idJogador === jogador.idJogador)
-          sala.jogador2 = null;
-
+    
+        // Mantém estrutura do jogador com id e nickname nulos
+        if (sala.jogador1?.idJogador === jogador.idJogador) {
+          sala.jogador1.idJogador = null;
+          sala.jogador1.nicknameJogador = null;
+        }
+        if (sala.jogador2?.idJogador === jogador.idJogador) {
+          sala.jogador2.idJogador = null;
+          sala.jogador2.nicknameJogador = null;
+        }
+    
         await redis.set(`sala:${idSala}`, JSON.stringify(sala));
         socket.leave(idSala);
+    
         await refreshRooms(io);
-
+        await atualizarSala(io, idSala); // ✅ avisa também a sala
+    
         callback?.({ sucesso: true });
       } catch (err) {
         console.error("Erro ao sair da sala:", err);
