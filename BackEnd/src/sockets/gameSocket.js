@@ -120,6 +120,7 @@ module.exports = (io) => {
 
     // ========== 🎯 Fazer Jogada ==========
     socket.on("fazerJogada", async ({ idSala, index, simbolo }, callback) => {
+      console.log("📥 Backend recebeu jogada!", { idSala, index, simbolo });
       try {
         const salaJSON = await redis.get(`sala:${idSala}`);
         if (!salaJSON) return callback?.({ sucesso: false, mensagem: "Sala não encontrada." });
