@@ -84,6 +84,12 @@ module.exports = (io) => {
           historico: [],
         };
 
+        await Sala.create({
+          idSala,
+          idJogadorCriouSala: data.jogador.idJogador,
+          qtdPartidasTotal: 0, // opcional
+        });
+
         await redis.set(`sala:${idSala}`, JSON.stringify(novaSala));
         socket.join(idSala);
         await atualizarSala(io, idSala);
