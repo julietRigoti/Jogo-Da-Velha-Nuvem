@@ -217,6 +217,10 @@ module.exports = (io) => {
         await redis.set(`sala:${idSala}`, JSON.stringify(sala));
         console.debug("💾 Sala atualizada no Redis:", sala);
 
+        io.to(idSala).emit("atualizarSala", sala);
+        console.debug("🔄 Sala atualizada para todos os jogadores na sala.");
+        
+
         callback?.({ sucesso: true, sala });
       } catch (error) {
         console.error("❌ Erro ao fazer jogada:", error);
