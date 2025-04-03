@@ -184,7 +184,7 @@ module.exports = (io) => {
         await redis.set(`sala:${idSala}`, JSON.stringify(sala));
         await atualizarSala(io, idSala); // 🔥 avisa todo mundo
 
-        callback?.({ sucesso: true });
+        callback?.({ sucesso: true, sala });
       } catch (err) {
         console.error("Erro ao fazer jogada:", err);
         callback?.({ sucesso: false, mensagem: "Erro ao processar jogada." });
