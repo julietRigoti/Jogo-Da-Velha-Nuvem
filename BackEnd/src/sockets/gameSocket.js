@@ -202,6 +202,8 @@ module.exports = (io) => {
           });
 
         const sala = JSON.parse(salaJSON);
+        // 💡 GARANTE que o jogador entre no canal da sala
+        socket.join(idSala);
         callback?.({ sucesso: true, sala });
       } catch (err) {
         console.error("Erro ao recuperar sala:", err);
