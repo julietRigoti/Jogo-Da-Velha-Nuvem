@@ -79,6 +79,9 @@ module.exports = (io) => {
           currentPlayer: "X",
           tabuleiro: Array(9).fill(null),
           emAndamento: true,
+          winner: null,
+          scores: { X: 0, O: 0 },
+          historico: [],
         };
 
         await redis.set(`sala:${idSala}`, JSON.stringify(novaSala));
