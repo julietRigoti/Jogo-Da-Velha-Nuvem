@@ -5,25 +5,15 @@ const { signup, login } = require("../controllers/authController");
 
 const router = express.Router();
 
-router.post(
-  "/signup",
-  cors({
-    origin: "https://jogo-da-velha-nuvem.vercel.app",
-  }),
-  (req, res) => {
-    // Lógica do signup
-    res.json({ message: "Usuário cadastrado com sucesso!" });
-  }
-);
-router.post(
-  "/login",
-  cors({
-    origin: "https://jogo-da-velha-nuvem.vercel.app",
-  }),
-  (req, res) => {
-    // Lógica do signup
-    res.json({ message: "Login com sucesso!" });
-  }
-);
+// Middleware de CORS específico para essas rotas
+const corsOptions = {
+  origin: "https://jogo-da-velha-nuvem.vercel.app",
+};
+
+// Rota de cadastro (signup)
+router.post("/signup", cors(corsOptions), signup);
+
+// Rota de login
+router.post("/login", cors(corsOptions), login);
 
 module.exports = router;
