@@ -107,6 +107,7 @@ module.exports = (io) => {
     });
 
     socket.on("entrarSala", async (data, callback) => {
+      
       try {
         const { idSala, jogador2 } = data;
         const salaJSON = await redis.get(`sala:${idSala}`);
@@ -125,6 +126,7 @@ module.exports = (io) => {
           sala.jogador2.idJogador = jogador2.idJogador;
           sala.jogador2.nicknameJogador = jogador2.nicknameJogador;
           await redis.set(`sala:${idSala}`, JSON.stringify(sala));
+          console.log(`🧩 Socket ${socket.id} entrou na sala ${idSala}`);
 
           socket.join(idSala);
         } else {
@@ -133,7 +135,7 @@ module.exports = (io) => {
             mensagem: "Sala já está cheia.",
           });
         }
-
+        
         console.log("Entrando na sala:", idSala);
         atualizarSala(io, idSala);
 
