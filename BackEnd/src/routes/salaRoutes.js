@@ -5,9 +5,9 @@ const cors = require("cors");
 const router = express.Router();
 
 // Rota para criar uma sala
-router.post("/criar-sala", cors(corsOptions), criarSala);
+router.post("/criar-sala", criarSala);
 
 // Rota para entrar em uma sala
-router.post("/entrar-sala/:idSala", cors(corsOptions), entrarSala);
+router.post("/entrar-sala/:idSala", entrarSala);
 
 module.exports = router;
