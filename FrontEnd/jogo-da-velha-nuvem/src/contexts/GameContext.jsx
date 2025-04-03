@@ -10,10 +10,6 @@ if (!backendUrl) {
   );
 }
 
-if (import.meta.env.VITE_REACT_APP_ENV === "development") {
-  console.log("URL do backend:", backendUrl);
-}
-
 const socket = socketClient(backendUrl, {
   autoConnect: false,
   transports: ["websocket", "polling"],
