@@ -68,14 +68,13 @@ module.exports = (io) => {
           jogador1: {
             ...data.jogador,
             simbolo: "X",
-            currentPlayer: "X",
           },
           jogador2: {
             idJogador: null,
             nicknameJogador: null,
             simbolo: "O",
-            currentPlayer: "O",
           },
+          currentPlayer: "X",
           tabuleiro: Array(9).fill(null),
           emAndamento: true,
         };
@@ -131,12 +130,11 @@ module.exports = (io) => {
           return callback?.({ sucesso: false, mensagem: "O jogo já foi finalizado." });
         }
     
-        const isTurnoCorreto =
-          (sala.jogador1.currentPlayer && simbolo === "X") ||
-          (sala.jogador2.currentPlayer && simbolo === "O");
-    
-        if (!isTurnoCorreto) {
-          return callback?.({ sucesso: false, mensagem: "Não é sua vez." });
+        if (sala.currentPlayer !== simbolo) {
+          return callback?.({
+            sucesso: false,
+            mensagem: "Não é sua vez.",
+          });
         }
     
         if (sala.tabuleiro[index] !== null) {
@@ -150,9 +148,7 @@ module.exports = (io) => {
           sala.winner = vencedor;
           sala.emAndamento = false;
         } else {
-          // Troca o turno
-          sala.jogador1.currentPlayer = simbolo === "O";
-          sala.jogador2.currentPlayer = simbolo === "X";
+          sala.currentPlayer = simbolo === "X" ? "O" : "X";
         }
     
         await redis.set(`sala:${idSala}`, JSON.stringify(sala));
