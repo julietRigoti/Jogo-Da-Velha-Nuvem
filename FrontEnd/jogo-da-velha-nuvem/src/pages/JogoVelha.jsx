@@ -159,39 +159,52 @@ const JogoVelha = () => {
 
         {/* Painel lateral */}
         <div className={stylesGame.infoPainel}>
-          <h2>Jogo da Velha</h2>
+          <h2 className={stylesGame.h2}>Jogo da Velha</h2>
+
           <p>{playerInfo.nicknameJogador} é: {playerInfo.simbolo}</p>
 
           {gameState.winner ? (
-            <div className={stylesGame.winnerMessage}>
-              <h2>Vencedor: {gameState.winner}</h2>
-            </div>
+            <p className={stylesGame.winnerMessage}> Vencedor: {gameState.winner}</p>
           ) : gameState.board.every((cell) => cell !== null) ? (
             <p>Empate! Tabuleiro cheio.</p>
           ) : (
             <p>Vez de: {gameState.currentPlayer}</p>
           )}
 
+          <p>Placar:</p>
+          <div className={stylesGame.placar}>
+            <p>X ({sala.jogador1?.nicknameJogador || "?"}): {gameState.scores.X}</p>
+            <p>O ({sala.jogador2?.nicknameJogador || "?"}): {gameState.scores.O}</p>
+          </div>
+
           {!sala.jogador2?.idJogador ? (
-            <p>Aguardando outro jogador entrar...</p>
+            <p> Aguardando outro jogador entrar...</p>
           ) : (
-            <p>Jogadores prontos: {sala.jogador1.nicknameJogador} vs {sala.jogador2.nicknameJogador}</p>
+            <p> Jogadores: {sala.jogador1.nicknameJogador} vs {sala.jogador2.nicknameJogador}</p>
           )}
 
-          <button onClick={handleRestart}>Reiniciar</button>
+          <div className={stylesGame.buttonContainer}>
+            <button className={stylesGame.restartButton} onClick={handleRestart}>
+              Reiniciar Jogo
+            </button>
+          </div>
 
-          {error && <p style={{ color: "red" }}>{error}</p>}
+          {/* Imagens */}
+          <div className={stylesGame.imagemContainer}>
+            <img
+              className={stylesGame.imagemXO}
+              src={imagemX}
+              alt="Pixelart tabuleiro com X"
+            />
+            <img
+              className={stylesGame.imagemXO}
+              src={imagemO}
+              alt="Pixelart tabuleiro com O"
+            />
+          </div>
+
+          {error && <p className={stylesGame.errorMessage}>{error}</p>}
         </div>
-        <img
-          className={stylesHome.imagemX}
-          src={imagemX}
-          alt="Pixelart tabuleiro com X"
-        />
-        <img
-          className={stylesHome.imagemO}
-          src={imagemO}
-          alt="Pixelart tabuleiro com O"
-        />
       </div>
     </div>
   );

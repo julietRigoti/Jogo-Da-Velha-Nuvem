@@ -98,23 +98,47 @@
   align-items: center;
   margin-top: 20px; /* Adicionei um espaço acima do botão */
 }
-.restartButton {
-  width: 65%;
-  background-color: #f8bc63;
-  color: #112736;
-  cursor: pointer;
+
+.h2 {
+  font-size: 1.8em;
+  font-weight: bold;
+  align-self: center;
+  text-align: center;
+  margin: 0; /* Remove o espaço padrão do h2 */
+  padding: 0; /* Remove o preenchimento padrão do h2 */
+  margin-bottom: 10px;
+}
+
+.imagemContainer {
   display: flex;
   justify-content: center;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  gap: 10px;
+}
+
+.imagemXO {
+  width: 80px;
+  height: 80px;
+}
+
+.restartButton {
+  background-color:  #112736;
+  color: #efdebb; 
+  border: none;
+  transition: all 0.3s ease-in-out;
 }
 
 .restartButton:hover {
   background-color: #c3332d;
-  color: #f8bc63;
+  color: #112736;
 }
 
-.h2 {
-  font-size: 1.2em;
-  text-align: center;
-  margin-bottom: 10px;
+.placar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.placar p {
+  margin: 0;
+  padding: 0;
 }

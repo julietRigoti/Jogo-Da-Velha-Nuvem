@@ -119,14 +119,16 @@ const Login = () => {
             {isLoading ? "Carregando..." : "Entrar"}
           </button>
         </form>
-        <div className={stylesLogin.mt3}>
+
+        <div className={stylesLogin.LoginLink}>
           <button
-            className={stylesLogin.textDecorationNone}
+            className={stylesLogin.btnLink}
             onClick={() => navigate("/signup")}
           >
             Não tem uma conta? Cadastre-se
           </button>
         </div>
+
       </div>
       <img
         className={stylesHome.imagemX}

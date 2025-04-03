@@ -49,13 +49,24 @@
   color: #f8bc63;
 }
 
-.textDecorationNone {
-  color: #112736;
+
+.LoginLink {
+  margin-top: 10px;
+  font-size: 14px;
 }
 
-.textDecorationNone:hover {
+.btnLink {
+  background: none;
+  border: none;
+  color: #112736;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btnLink:hover {
   color: #c3332d;
 }
+
 
 #loginForm {
   text-align: start;

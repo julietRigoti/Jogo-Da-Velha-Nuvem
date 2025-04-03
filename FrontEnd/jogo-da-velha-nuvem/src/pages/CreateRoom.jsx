@@ -3,6 +3,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 import styles from "../style/Room.module.css";
+import stylesHome from "../style/Home.module.css";
+import imagemX from "../assets/X.gif";
+import imagemO from "../assets/O.gif";
 
 const CreateRoom = () => {
   const navigate = useNavigate();
@@ -117,6 +120,16 @@ const CreateRoom = () => {
       ) : (
         <p>Nenhuma sala disponível no momento.</p>
       )}
+         <img
+              className={stylesHome.imagemX}
+              src={imagemX}
+              alt="Pixelart tabuleiro com X"
+            />
+            <img
+              className={stylesHome.imagemO}
+              src={imagemO}
+              alt="Pixelart tabuleiro com O"
+            />
     </div>
   );
 };

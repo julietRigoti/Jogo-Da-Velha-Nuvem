@@ -177,6 +177,22 @@ module.exports = (io) => {
         if (vencedor) {
           sala.winner = vencedor;
           sala.emAndamento = false;
+        
+          sala.historico.push({
+            vencedor: simbolo,
+            data: new Date().toISOString(),
+            estadoFinal: [...sala.tabuleiro],
+          });
+        
+          sala.scores[simbolo] = (sala.scores[simbolo] || 0) + 1;
+
+          await Historico.create({
+            idSala: sala.idSala,
+            idJogador1: sala.jogador1.idJogador,
+            idJogador2: sala.jogador2.idJogador,
+            pontuacaoJogador1: sala.scores.X,
+            pontuacaoJogador2: sala.scores.O,
+          });
         } else {
           sala.currentPlayer = simbolo === "X" ? "O" : "X";
         }
