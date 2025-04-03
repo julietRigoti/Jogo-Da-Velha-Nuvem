@@ -91,11 +91,6 @@ const JogoVelha = () => {
 
   // 🔄 Envia jogada
   const handleCellClick = (index) => {
-    console.log("🧩 Dados para validar turno:");
-    console.log("Simbolo recebido:", simbolo);
-    console.log("Turno atual da sala:", sala.currentPlayer);
-    console.log("Jogador 1:", sala.jogador1);
-    console.log("Jogador 2:", sala.jogador2);
     if (!canMakeMove(index)) return;
 
     socket.emit("fazerJogada", {
