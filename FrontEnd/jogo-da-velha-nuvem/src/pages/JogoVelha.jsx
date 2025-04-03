@@ -131,7 +131,7 @@ const JogoVelha = () => {
     socket.emit("sairSala", { idSala }, (response) => {
       if (response.sucesso) {
         console.log("🚪 Saiu da sala com sucesso!");
-        window.location.href = "/criar-sala"; // ou use `navigate("/sala")` se estiver usando `useNavigate()`
+        navigate("/criar-sala"); // ou use `navigate("/sala")` se estiver usando `useNavigate()`
       } else {
         setError(response.mensagem || "Erro ao sair da sala.");
       }
