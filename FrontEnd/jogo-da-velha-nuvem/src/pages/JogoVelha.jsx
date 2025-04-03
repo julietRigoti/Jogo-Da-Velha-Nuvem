@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 import stylesGame from "../style/Game.module.css";
 import stylesHome from "../style/Home.module.css";
+import imagemX from "../assets/X.gif";
+import imagemO from "../assets/O.gif";
 
 const JogoVelha = () => {
   const { idSala } = useParams();
@@ -37,10 +39,10 @@ const JogoVelha = () => {
   // Recupera sala e registra o listener
   useEffect(() => {
     if (!socket || !isConnected || !idSala) return;
-  
+
     console.log("🟢 Registrando listener de atualizarSala...");
     socket.on("atualizarSala", handleAtualizarSala);
-  
+
     socket.emit("recuperarSala", { idSala }, (response) => {
       if (response.sucesso) {
         console.log("🔹 Sala recuperada:", response.sala);
@@ -51,13 +53,13 @@ const JogoVelha = () => {
         setIsLoading(false);
       }
     });
-  
+
     return () => {
       console.log("❌ Limpando listener atualizarSala");
       socket.off("atualizarSala", handleAtualizarSala);
     };
   }, [socket, isConnected, idSala]);
-  
+
 
   // Define símbolo do jogador
   useEffect(() => {
@@ -123,8 +125,12 @@ const JogoVelha = () => {
     });
   };
 
-  if (isLoading || !playerInfo) {
+  if (isLoading) {
     return <p className={stylesHome.h1}>Carregando jogo...</p>;
+  }
+
+  if (!playerInfo) {
+    return <p className={stylesHome.h1}>Carregando informações do jogador...</p>;
   }
 
   return (
@@ -154,12 +160,11 @@ const JogoVelha = () => {
         {/* Painel lateral */}
         <div className={stylesGame.infoPainel}>
           <h2>Jogo da Velha</h2>
-          <p>Você é: {playerInfo.simbolo}</p>
+          <p>{playerInfo.nicknameJogador} é: {playerInfo.simbolo}</p>
 
           {gameState.winner ? (
             <div className={stylesGame.winnerMessage}>
               <h2>Vencedor: {gameState.winner}</h2>
-              <button onClick={handleRestart}>Reiniciar</button>
             </div>
           ) : gameState.board.every((cell) => cell !== null) ? (
             <p>Empate! Tabuleiro cheio.</p>
@@ -167,10 +172,26 @@ const JogoVelha = () => {
             <p>Vez de: {gameState.currentPlayer}</p>
           )}
 
-          <button onClick={handleRestart}>Reiniciar Jogo</button>
+          {!sala.jogador2?.idJogador ? (
+            <p>Aguardando outro jogador entrar...</p>
+          ) : (
+            <p>Jogadores prontos: {sala.jogador1.nicknameJogador} vs {sala.jogador2.nicknameJogador}</p>
+          )}
+
+          <button onClick={handleRestart}>Reiniciar</button>
 
           {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
+        <img
+          className={stylesHome.imagemX}
+          src={imagemX}
+          alt="Pixelart tabuleiro com X"
+        />
+        <img
+          className={stylesHome.imagemO}
+          src={imagemO}
+          alt="Pixelart tabuleiro com O"
+        />
       </div>
     </div>
   );

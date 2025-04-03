@@ -99,7 +99,7 @@ const SignUp = () => {
       sessionStorage.setItem("nicknameJogador", jogador.nicknameJogador);
 
       // Redireciona para a página de criação de sala
-      navigate("/criar-sala");
+      navigate("/login");
     } catch (error) {
       if (error.message === "Failed to fetch") {
         setError("Erro de conexão com o servidor. Tente novamente mais tarde.");
