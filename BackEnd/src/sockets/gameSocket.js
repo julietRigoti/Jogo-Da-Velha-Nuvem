@@ -177,22 +177,24 @@ module.exports = (io) => {
         if (vencedor) {
           sala.winner = vencedor;
           sala.emAndamento = false;
-        
-          sala.historico.push({
-            vencedor: simbolo,
-            data: new Date().toISOString(),
-            estadoFinal: [...sala.tabuleiro],
-          });
-        
-          sala.scores[simbolo] = (sala.scores[simbolo] || 0) + 1;
 
-          await Historico.create({
-            idSala: sala.idSala,
-            idJogador1: sala.jogador1.idJogador,
-            idJogador2: sala.jogador2.idJogador,
-            pontuacaoJogador1: sala.scores.X,
-            pontuacaoJogador2: sala.scores.O,
-          });
+          // Adiciona pontuação ao vencedor
+          if (vencedor === "X") sala.scores.X++;
+          else if (vencedor === "O") sala.scores.O++;
+
+          // ✅ Salva histórico no PostgreSQL
+          try {
+            await Historico.create({
+              idSala: parseInt(idSala), // atenção ao tipo
+              idJogador1: sala.jogador1.idJogador,
+              idJogador2: sala.jogador2.idJogador,
+              pontuacaoJogador1: sala.scores.X,
+              pontuacaoJogador2: sala.scores.O,
+            });
+            console.log("💾 Histórico salvo com sucesso.");
+          } catch (err) {
+            console.error("Erro ao salvar histórico:", err);
+          }
         } else {
           sala.currentPlayer = simbolo === "X" ? "O" : "X";
         }
@@ -285,6 +287,11 @@ module.exports = (io) => {
 
         sala.jogador1.currentPlayer = true;
         sala.jogador2.currentPlayer = false;
+
+        await Sala.increment("qtdPartidasTotal", {
+          by: 1,
+          where: { idSala },
+        });
 
         await redis.set(`sala:${idSala}`, JSON.stringify(sala));
         await atualizarSala(io, idSala);

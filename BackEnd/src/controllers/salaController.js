@@ -15,24 +15,3 @@ exports.criarSala = async (req, res) => {
   }
 };
 
-exports.entrarSala = async (req, res) => {
-  const { idSala } = req.params;
-  const { idJogador } = req.body;
-
-  try {
-    const sala = await db.Sala.findByPk(idSala);
-    if (!sala) return res.status(404).json({ error: "Sala não encontrada." });
-
-    const jogador = await db.Jogador.findByPk(idJogador);
-    if (!jogador)
-      return res.status(404).json({ error: "Jogador não encontrado." });
-
-    jogador.idSala = sala.idSala;
-    await jogador.save();
-
-    res.json({ message: "Jogador entrou na sala com sucesso!" });
-  } catch (err) {
-    console.error("Erro ao entrar na sala:", err);
-    res.status(500).json({ error: "Erro interno do servidor." });
-  }
-};
