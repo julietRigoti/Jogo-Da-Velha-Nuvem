@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { GameContext } from "../contexts/GameContext";
 import stylesGame from "../style/Game.module.css";
 import stylesHome from "../style/Home.module.css";
@@ -7,6 +7,7 @@ import imagemX from "../assets/X.gif";
 import imagemO from "../assets/O.gif";
 
 const JogoVelha = () => {
+  const navigate = useNavigate();
   const { idSala } = useParams();
   const { state } = useContext(GameContext);
   const { socket, isConnected, player } = state;
