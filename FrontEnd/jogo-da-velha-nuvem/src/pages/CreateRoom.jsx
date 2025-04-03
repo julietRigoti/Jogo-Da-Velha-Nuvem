@@ -110,26 +110,24 @@ const CreateRoom = () => {
         <ul>
           {rooms.map((sala) => (
             <li key={sala.idSala}>
-              Sala ID: {sala.idSala} - Criada por: {sala.jogador1.nicknameJogador}{" "}
-              <button onClick={() => handleEnterRoom(sala.idSala)}>
-                Entrar na Sala
-              </button>
+              Sala ID: {sala.idSala} - Criada por: {sala.jogador1?.nicknameJogador || "Desconhecido"}{" "}
+              <button onClick={() => handleEnterRoom(sala.idSala)}>Entrar na Sala</button>
             </li>
           ))}
         </ul>
       ) : (
         <p>Nenhuma sala disponível no momento.</p>
       )}
-         <img
-              className={stylesHome.imagemX}
-              src={imagemX}
-              alt="Pixelart tabuleiro com X"
-            />
-            <img
-              className={stylesHome.imagemO}
-              src={imagemO}
-              alt="Pixelart tabuleiro com O"
-            />
+      <img
+        className={stylesHome.imagemX}
+        src={imagemX}
+        alt="Pixelart tabuleiro com X"
+      />
+      <img
+        className={stylesHome.imagemO}
+        src={imagemO}
+        alt="Pixelart tabuleiro com O"
+      />
     </div>
   );
 };

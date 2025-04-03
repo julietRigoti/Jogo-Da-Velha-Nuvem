@@ -80,8 +80,8 @@
   color: #112736;
   padding: 15px;
   border-radius: 10px;
-  width: 420px;
-  height: 400px;
+  width: 450px;
+  height: 420px;
   flex-direction: column;
   align-items: left;
   text-align: left;
@@ -116,8 +116,8 @@
 }
 
 .imagemXO {
-  width: 80px;
-  height: 80px;
+  width: 45px;
+  height: 45px;
 }
 
 .restartButton {
@@ -142,3 +142,13 @@
   margin: 0;
   padding: 0;
 }
+
+.leaveButton {
+  font-size: 13px;
+  background: none;
+  color: #112736;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+}
+

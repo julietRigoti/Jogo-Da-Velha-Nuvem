@@ -125,6 +125,19 @@ const JogoVelha = () => {
     });
   };
 
+  const handleLeaveRoom = () => {
+    if (!socket) return;
+  
+    socket.emit("sairSala", { idSala }, (response) => {
+      if (response.sucesso) {
+        console.log("🚪 Saiu da sala com sucesso!");
+        window.location.href = "/criar-sala"; // ou use `navigate("/sala")` se estiver usando `useNavigate()`
+      } else {
+        setError(response.mensagem || "Erro ao sair da sala.");
+      }
+    });
+  };
+
   if (isLoading) {
     return <p className={stylesHome.h1}>Carregando jogo...</p>;
   }
@@ -189,6 +202,8 @@ const JogoVelha = () => {
             </button>
           </div>
 
+          <button onClick={handleLeaveRoom}className={stylesGame.leaveButton} >Sair da Sala</button>
+
           {/* Imagens */}
           <div className={stylesGame.imagemContainer}>
             <img
@@ -201,9 +216,10 @@ const JogoVelha = () => {
               src={imagemO}
               alt="Pixelart tabuleiro com O"
             />
-          </div>
 
-          {error && <p className={stylesGame.errorMessage}>{error}</p>}
+            
+          </div>
+            
         </div>
       </div>
     </div>
