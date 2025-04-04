@@ -48,9 +48,6 @@ Projeto completo de um jogo da velha multiplayer em tempo real com backend na nu
 │   │   └── style (CSS Modules)
 ```
 
-## 🖼️ Captura de Tela
-![tela](./src/assets/demo.png)
-
 ## 📝 Como Rodar Localmente
 
 ### Backend:
@@ -79,9 +76,34 @@ Configure a URL do backend no `GameContext.jsx`:
 const URL_BACKEND = "http://localhost:8080"; // ou Railway
 ```
 
+### 📱 Acessar o Jogo
+
+Acesse o frontend pelo navegador em `http://localhost:5173`.
+Crie uma conta ou faça login, crie uma sala e jogue com amigos!
+
+
+## Acesso ao Jogo Online
+
+- Jogo: [Jogo da Velha](https://jogo-da-velha-nuvem.vercel.app/)
+
+### 📜 Licença
+
+Esse projeto é de código aberto e pode ser utilizado, modificado e distribuído sob os termos da licença MIT.
+
 ## ✨ Créditos e Reconhecimento
 Esse projeto foi desenvolvido com muito carinho e com ajuda da IA 💻✨
 
+## 📬 Contato
+Se quiser conversar, contribuir(porque tem muita coisa que pode melhorar) ou dar ideias:
+- GitHub: [julietRigoti]
+- Email: [rigotijuliet@gmail.com]
+
+---
 
 Divirta-se jogando! 🎮
+
+By: [julietRigoti] e [vitoriameloo0]
+```
+[//]: # (end of README.md)
+```
 
