@@ -95,15 +95,13 @@ Esse projeto foi desenvolvido com muito carinho e com ajuda da IA 💻✨
 
 ## 📬 Contato
 Se quiser conversar, contribuir(porque tem muita coisa que pode melhorar) ou dar ideias:
-- GitHub: [julietRigoti]
+- GitHub: [[julietRigoti](https://github.com/julietRigoti)]
 - Email: [rigotijuliet@gmail.com]
 
 ---
 
 Divirta-se jogando! 🎮
 
-By: [julietRigoti] e [vitoriameloo0]
-```
-[//]: # (end of README.md)
-```
+By: [[julietRigoti](https://github.com/julietRigoti)] e [[vitoriameloo0](https://github.com/vitoriameloo0)]
+
 
